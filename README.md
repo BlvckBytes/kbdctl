@@ -19,7 +19,7 @@ After making sure the dependency is installed, just run `make`, or `make clean &
 
 As there is no documentation available for the protocol and I don't just want to copy and paste random code from github, I'm actually trying to reverse engineer the protocol on my own, to learn something along the way.
 
-To capture packets sent out from X I'm using [USBPcap](https://github.com/desowin/usbpcap) in combination with [Wireshark](https://www.wireshark.org) to live-capture all packets using the following commmand:
+To capture packets sent out from [Logitech G HUB](https://www.logitechg.com/de-at/innovation/g-hub.html) I'm using [USBPcap](https://github.com/desowin/usbpcap) in combination with [Wireshark](https://www.wireshark.org) to live-capture all packets using the following commmand:
 
 `USBPcapCMD.exe -d \\.\USBPcap2 -A -o - | "C:\Program Files\Wireshark\Wireshark.exe" -k -i -`
 
