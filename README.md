@@ -5,9 +5,9 @@ I bought a Logitech G Pro TKL RGB keyboard a few weeks ago, and now I'm sick and
 ## ToDo
 
 - [X] Locate the keyboard and get a handle to it
-- [ ] Apply static color
-- [ ] Apply built in animation
-- [ ] Apply custom key lighting
+- [X] Apply static color
+- [X] Apply built in animation
+- [ ] Apply custom key lighting (per key & key groups)
 
 ## Usage
 

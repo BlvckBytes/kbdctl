@@ -89,5 +89,18 @@ bool keyboard_transmit(keyboard_t *kb, uint8_t *data, size_t data_len)
   if (!kb->handle) return false;
 
   // Write bytes
-  return hid_write(kb->handle, data, data_len) > 0;
+  bool res = hid_write(kb->handle, data, data_len) > 0;
+
+  // Debug transmission bytes
+  #ifdef DEBUG_EN
+  if (res)
+  {
+    printf("transmitted: ");
+    for (size_t i = 0; i < data_len; i++)
+      printf("%s0x%02x", i == 0 ? "" : ", ", data[i]);
+    printf("\n");
+  }
+  #endif
+
+  return res;
 }

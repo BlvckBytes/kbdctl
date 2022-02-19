@@ -4,6 +4,7 @@
 #include <hidapi/hidapi.h>
 
 #include "strconv.h"
+#include "common_macros.h"
 #include "mman.h"
 
 typedef struct keyboard

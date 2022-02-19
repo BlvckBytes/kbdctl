@@ -36,10 +36,11 @@ mman_meta_t *mman_fetch_meta(void *ptr)
  * 
  * @param block_size Size of one data block in bytes
  * @param num_blocks Number of blocks with block_size
+ * @param zero_init Whether or not to zero-initialize all blocks
  * @param cf Cleanup function
  * @return mman_meta_t Pointer to the meta-info
  */
-INLINED static mman_meta_t *mman_create(size_t block_size, size_t num_blocks, mman_cleanup_f_t cf)
+INLINED static mman_meta_t *mman_create(size_t block_size, size_t num_blocks, bool zero_init, mman_cleanup_f_t cf)
 {
   mman_meta_t *meta = (mman_meta_t *) malloc(
     sizeof(mman_meta_t) // Meta information
@@ -54,6 +55,9 @@ INLINED static mman_meta_t *mman_create(size_t block_size, size_t num_blocks, mm
     .refs = 1
   };
 
+  if (zero_init)
+    memset(meta->ptr, 0x0, num_blocks * block_size);
+
   return meta;
 }
 
@@ -63,7 +67,16 @@ void *mman_alloc(size_t block_size, size_t num_blocks, mman_cleanup_f_t cf)
   atomic_increment(&mman_alloc_count);
 
   // Create new meta-info and return a pointer to the data block
-  return mman_create(block_size, num_blocks, cf)->ptr;
+  return mman_create(block_size, num_blocks, false, cf)->ptr;
+}
+
+void *mman_calloc(size_t block_size, size_t num_blocks, mman_cleanup_f_t cf)
+{
+  // INFO: Increment the allocation count for debugging purposes
+  atomic_increment(&mman_alloc_count);
+
+  // Create new meta-info and return a pointer to the data block
+  return mman_create(block_size, num_blocks, true, cf)->ptr;
 }
 
 mman_meta_t *mman_realloc(void **ptr_ptr, size_t block_size, size_t num_blocks)

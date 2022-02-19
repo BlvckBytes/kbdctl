@@ -86,6 +86,17 @@ mman_meta_t *mman_fetch_meta(void *ptr);
 void *mman_alloc(size_t block_size, size_t num_blocks, mman_cleanup_f_t cf);
 
 /**
+ * @brief Allocate zero-initialized memory and get a managed reference to it
+ * 
+ * @param block_size Size of one data block
+ * @param size Number of blocks to allocate
+ * @param cf Function for additional cleanup operations on pointers inside the data-block,
+ * leave this as NULL when none exist and nothing has been allocated separately
+ * @return void* Pointer to the resource, NULL if no space left
+ */
+void *mman_calloc(size_t block_size, size_t num_blocks, mman_cleanup_f_t cf);
+
+/**
  * @brief Reallocate a managed datablock
  * 
  * @param ptr_ptr Pointer to the pointer to the resource
