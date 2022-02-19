@@ -38,7 +38,7 @@ void keyboard_print(keyboard_t *kb);
  * @param kb Keyboard to connect
  * 
  * @return true Successfully connected
- * @return false Error during connection trial
+ * @return false Error during connection trial, maybe forgot sudo?
  */
 bool keyboard_open(keyboard_t *kb);
 
@@ -48,5 +48,17 @@ bool keyboard_open(keyboard_t *kb);
  * @param kb Keyboard to connect
  */
 void keyboard_close(keyboard_t *kb);
+
+/**
+ * @brief Transmit a sequence of bytes to the keyboard
+ * 
+ * @param kb Keyboard reference
+ * @param data Sequence of bytes to send
+ * @param data_len Number of bytes in that sequence
+ * 
+ * @return true Successfully sent
+ * @return false Could not send, maybe forgot to open first?
+ */
+bool keyboard_transmit(keyboard_t *kb, uint8_t *data, size_t data_len);
 
 #endif

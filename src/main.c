@@ -51,6 +51,15 @@ int main(void)
 
   printf("Got a connection, could execute commands now!\n");
 
+  // This means "horizontal rgb wave"
+  // I still need to learn how this protocol works using other projects, take it as a magic sequence for now...
+  uint8_t data[] = {
+    0x11, 0xff, 0x0d, 0x3c, 0x00, 0x04, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x0a, 0x00, 0x01, 0x64, 0x0a, 0x00, 0x00, 0x00, 0x00
+  };
+
+  if (!keyboard_transmit(kb, data, sizeof(data)))
+    fprintf(stderr, "Could not transmit data!\n");
+
   keyboard_close(kb);
   hid_exit();
   return 0;

@@ -75,3 +75,9 @@ void keyboard_close(keyboard_t *kb)
   hid_close(kb->handle);
   kb->handle = NULL;
 }
+
+bool keyboard_transmit(keyboard_t *kb, uint8_t *data, size_t data_len)
+{
+  if (!kb->handle) return false;
+  return hid_write(kb->handle, data, data_len) > 0;
+}
