@@ -3,6 +3,7 @@
 
 #include "mman.h"
 #include "keyboard.h"
+#include "strconv.h"
 
 #define TKB_VID 0x046D
 #define TKB_PID 0xC339
@@ -10,6 +11,7 @@
 int main(void)
 {
   struct hid_device_info *henum, *dev;
+  hid_init();
   henum = hid_enumerate(0x0, 0x0);
 
   // Loop all known local devices
@@ -33,10 +35,23 @@ int main(void)
   if (!kb)
   {
     fprintf(stderr, "Could not find the keyboard matching vid=%d and pid=%d!\n", TKB_VID, TKB_PID);
+    hid_exit();
     return 1;
   }
 
   // Print keyboard
+  printf("Using the following keyboard:\n");
   keyboard_print(kb);
+
+  if (!keyboard_open(kb))
+  {
+    hid_exit();
+    return 1;
+  }
+
+  printf("Got a connection, could execute commands now!\n");
+
+  keyboard_close(kb);
+  hid_exit();
   return 0;
 }
