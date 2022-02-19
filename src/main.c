@@ -51,7 +51,7 @@ int main(void)
   }
 
   scptr uint8_t *data = ctl_frame_make(EFFECTS);
-  ctl_frame_effect_dynamic_apply(
+  ctl_frame_effect_apply(
     data,
     WAVE,
     2000,

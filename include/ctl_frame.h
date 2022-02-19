@@ -103,19 +103,29 @@ typedef enum ctl_frame_wave_type
  */
 uint8_t *ctl_frame_make(ctl_frame_type_t type);
 
+/**
+ * @brief Apply the target byte(s) to a frame
+ * 
+ * @param frame Frame to apply to
+ * @param target Target
+ */
 void ctl_frame_target_apply(uint8_t *frame, ctl_frame_target_t target);
 
-void ctl_frame_effect_dynamic_apply(
+/**
+ * @brief Apply all parameter's byte(s) needed for a built-in effect
+ * 
+ * @param frame Frame to apply to
+ * @param effect Effect to display
+ * @param time Duration/period of the animation, value is ignored for non-timed effects
+ * @param color Color of the effect, is ignored for non-colorable effects
+ * @param wave_type Type of the wave, is ignored for non-wave effects
+ */
+void ctl_frame_effect_apply(
   uint8_t *frame,
   ctl_frame_effect_t effect,
   uint16_t time,
   ctl_frame_color_t color,
   ctl_frame_wave_type_t wave_type
-);
-
-void ctl_frame_effect_static_apply(
-  uint8_t *frame,
-  ctl_frame_color_t color
 );
 
 #endif

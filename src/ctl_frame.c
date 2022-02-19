@@ -44,7 +44,7 @@ void ctl_frame_target_apply(uint8_t *frame, ctl_frame_target_t target)
   frame[4] = target;
 }
 
-void ctl_frame_effect_dynamic_apply(
+void ctl_frame_effect_apply(
   uint8_t *frame,
   ctl_frame_effect_t effect,
   uint16_t time,
@@ -57,23 +57,28 @@ void ctl_frame_effect_dynamic_apply(
   // Split up 16 bit time value
   uint8_t time_msb = (time >> 8) & 0xFF, time_lsb = (time >> 0) & 0xFF;
 
-  // Apply color bytes
-  frame[6] = color.r;
-  frame[7] = color.g;
-  frame[8] = color.b;
+  // Apply color bytes if supported
+  if (effect == COLOR || effect == BREATHING)
+  {
+    frame[6] = color.r;
+    frame[7] = color.g;
+    frame[8] = color.b;
+  }
 
-  // Setting the time for all effects (redundant values don't hurt)
+  // Apply the time for all effects (redundant values don't hurt) if supported
+  if (effect != COLOR)
+  {
+    // Breathing time
+    frame[9] = time_msb;
+    frame[10] = time_lsb;
 
-  // Breathing time
-  frame[9] = time_msb;
-  frame[10] = time_lsb;
+    // Cycle time
+    frame[11] = time_msb;
+    frame[12] = time_lsb;
 
-  // Cycle time
-  frame[11] = time_msb;
-  frame[12] = time_lsb;
-
-  // Wave time
-  frame[15] = time_msb;
+    // Wave time
+    frame[15] = time_msb;
+  }
 
   // Apply the wave type if it's actually a wave
   if (effect == WAVE)
