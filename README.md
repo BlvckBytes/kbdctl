@@ -10,6 +10,10 @@ I bought a Logitech G Pro TKL RGB keyboard a few weeks ago, and now I'm sick and
 - [X] Apply static color
 - [X] Apply built in animation
 - [ ] Apply custom key lighting (per key & key groups)
+- [ ] Create custom animations using key-array frames
+- [ ] Turn this into a daemon using web-sockets
+- [ ] Add the ability to store settings on profiles
+- [ ] Just maybe... add a GUI?
 
 ## Usage
 
