@@ -1,5 +1,7 @@
 # kbdctl
 
+![keyboard](readme_img/keyboard.jpg)
+
 I bought a Logitech G Pro TKL RGB keyboard a few weeks ago, and now I'm sick and tired of the `Logitech G HUB` bloatware I need to install just to alter the lightshow. This is why I'm writing this barebones cli controller, to finally take care of business.
 
 ## ToDo
@@ -29,4 +31,4 @@ After observing for a while, I came up with this filter in order to only end up 
 
 ![capture.jpg](readme_img/capture.jpg)
 
-So... all that's left to do now is to play around with the settings in logitech's software and find byte-patterns.
+So... all that's left to do now is to play around with the settings in logitech's software and find byte-patterns. All documentation of the protocol will be located at `include/ctl_frame.h`.
