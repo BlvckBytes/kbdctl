@@ -47,18 +47,21 @@ keyboard_t *keyboard_from_hdi(struct hid_device_info *hdi)
 
 bool keyboard_open(keyboard_t *kb)
 {
+  // A non-null handle already exists
   if (kb->handle)
   {
     fprintf(stderr, "This keyboard is already connected!\n");
     return false;
   }
 
+  // Open connection
   kb->handle = hid_open(
     kb->vendor_id,
     kb->product_id,
     kb->serial
   );
 
+  // Could not open a connection
   if (!kb->handle)
   {
     scptr char *err = strconv(hid_error(NULL), 1024);
@@ -66,18 +69,25 @@ bool keyboard_open(keyboard_t *kb)
     return false;
   }
 
+  // Success
   return true;
 }
 
 void keyboard_close(keyboard_t *kb)
 {
+  // No active connection available
   if (!kb->handle) return;
+
+  // Close and set back to NULL
   hid_close(kb->handle);
   kb->handle = NULL;
 }
 
 bool keyboard_transmit(keyboard_t *kb, uint8_t *data, size_t data_len)
 {
+  // No active connection available
   if (!kb->handle) return false;
+
+  // Write bytes
   return hid_write(kb->handle, data, data_len) > 0;
 }

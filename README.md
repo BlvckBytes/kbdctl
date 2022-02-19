@@ -14,3 +14,19 @@ I bought a Logitech G Pro TKL RGB keyboard a few weeks ago, and now I'm sick and
 The controller will only work with the G-Pro, as protocols are not open-source and I'm neither having other keyboards within reach nor the time and dedication to work their protocols out. This is more of a hobby/fun project. To use the software, you only need `hidapi`. The makefile specifies dependencies in homebrews directory (`/opt/homebrew`), if you got your dependencies from somewhere else, alter the makefile.
 
 After making sure the dependency is installed, just run `make`, or `make clean && make` after changes.
+
+## Reversing The Protocol
+
+As there is no documentation available for the protocol and I don't just want to copy and paste random code from github, I'm actually trying to reverse engineer the protocol on my own, to learn something along the way.
+
+To capture packets sent out from X I'm using [USBPcap](https://github.com/desowin/usbpcap) in combination with [Wireshark](https://www.wireshark.org) to live-capture all packets using the following commmand:
+
+`USBPcapCMD.exe -d \\.\USBPcap2 -A -o - | "C:\Program Files\Wireshark\Wireshark.exe" -k -i -`
+
+Where `-d \\.\USBPcap2` means that I want to capture "controller" 2 (could differ for your setup) and `-A` includes all devices on this "controller" (as the docs on USBPcap are not too clear on how to filter at this stage). This will open a new instance of Wireshark which will now display captured packets.
+
+After observing for a while, I came up with this filter in order to only end up with control packets:
+
+![capture.jpg](readme_img/capture.jpg)
+
+So... all that's left to do now is to play around with the settings in logitech's software and find byte-patterns.
