@@ -50,19 +50,25 @@ int main(void)
     return 1;
   }
 
-  scptr uint8_t *data = ctl_frame_make(EFFECTS);
+  scptr uint8_t *data2 = ctl_frame_make(TYPE_EFFECTS);
   ctl_frame_effect_apply(
-    data,
-    WAVE,
-    2000,
+    data2,
+    EFFECT_WAVE_CIRC_CENTER_OUT,
+    500,
     (ctl_frame_color_t) { 0, 0, 0 },
-    WAVE_CIRC_CENTER_OUT
+    true
   );
 
-  ctl_frame_target_apply(data, TARG_KEYS);
+  ctl_frame_target_apply(data2, TARG_KEYS);
 
-  if (!keyboard_transmit(kb, data, mman_fetch_meta(data)->num_blocks))
+  if (!keyboard_transmit(kb, data2, mman_fetch_meta(data2)->num_blocks))
     fprintf(stderr, "Could not transmit data!\n");
+
+  // scptr uint8_t *data = ctl_frame_make(TYPE_BOOT_MODE);
+  // ctl_frame_boot_mode_apply(data, BOOT_STORAGE);
+
+  // if (!keyboard_transmit(kb, data, mman_fetch_meta(data)->num_blocks))
+  //   fprintf(stderr, "Could not transmit data!\n");
 
   keyboard_close(kb);
   hid_exit();

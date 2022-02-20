@@ -8,17 +8,18 @@ uint8_t *ctl_frame_make(ctl_frame_type_t type)
   switch (type)
   {
     // Effects and commits have 20B frames
-    case EFFECTS:
-    case DEACTIVATE:
-    case COMMIT:
+    case TYPE_EFFECTS:
+    case TYPE_DEACTIVATE:
+    case TYPE_COMMIT:
+    case TYPE_BOOT_MODE:
       frame_size = 20;
       res = mman_calloc(sizeof(uint8_t), frame_size, NULL);
       res[0] = TWENTY_BYTES;
-      res[14] = 0x64;
+      // res[14] = 0x64;
       break;
 
     // Keys have 64B frames
-    case KEYS:
+    case TYPE_KEYS:
       frame_size = 64;
       res = mman_calloc(sizeof(uint8_t), frame_size, NULL);
       res[0] = SIXTYFOUR_BYTES;
@@ -44,21 +45,28 @@ void ctl_frame_target_apply(uint8_t *frame, ctl_frame_target_t target)
   frame[4] = target;
 }
 
+void ctl_frame_boot_mode_apply(uint8_t *frame, ctl_frame_boot_mode_t boot_mode)
+{
+  frame[5] = 0x01;
+  frame[6] = boot_mode;
+}
+
 void ctl_frame_effect_apply(
   uint8_t *frame,
   ctl_frame_effect_t effect,
   uint16_t time,
   ctl_frame_color_t color,
-  ctl_frame_wave_type_t wave_type
+  bool store
 )
 {
-  frame[5] = effect;
+  // Apply effect and mask out meta-data
+  frame[5] = effect & 0xFF;
 
   // Split up 16 bit time value
   uint8_t time_msb = (time >> 8) & 0xFF, time_lsb = (time >> 0) & 0xFF;
 
   // Apply color bytes if supported
-  if (effect == COLOR || effect == BREATHING)
+  if (effect == EFFECT_COLOR || effect == EFFECT_BREATHING)
   {
     frame[6] = color.r;
     frame[7] = color.g;
@@ -66,7 +74,7 @@ void ctl_frame_effect_apply(
   }
 
   // Apply the time for all effects (redundant values don't hurt) if supported
-  if (effect != COLOR)
+  if (effect != EFFECT_COLOR)
   {
     // Breathing time
     frame[9] = time_msb;
@@ -80,7 +88,11 @@ void ctl_frame_effect_apply(
     frame[15] = time_msb;
   }
 
+  // Apply persistence if requested
+  if (store)
+    frame[16] = 0x1;
+
   // Apply the wave type if it's actually a wave
-  if (effect == WAVE)
-    frame[13] = wave_type;
+  if (effect & _EFFECT_WAVE)
+    frame[13] = (effect >> 8) & 0xFF;
 }

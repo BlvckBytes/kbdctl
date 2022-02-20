@@ -43,10 +43,11 @@ typedef enum ctl_frame_size
  */
 typedef enum ctl_frame_type
 {
-  EFFECTS             = 0x0D3C,       // Control built-in effects
-  DEACTIVATE          = 0x0D3E,       // 
-  KEYS                = 0x0C3A,       // Control per-key or key-groups
-  COMMIT              = 0x0C5A        // Commit key-changes
+  TYPE_KEYS           = 0x0C3A,       // Control per-key or key-groups
+  TYPE_COMMIT         = 0x0C5A,       // Commit key-changes
+  TYPE_EFFECTS        = 0x0D3C,       // Control built-in effects
+  TYPE_DEACTIVATE     = 0x0D3E,       // Deactivate the lighting
+  TYPE_BOOT_MODE      = 0x0D5A        // Set up into which mode the kbd will boot
 } ctl_frame_type_t;
 
 /**
@@ -59,14 +60,37 @@ typedef enum ctl_frame_target
 } ctl_frame_target_t;
 
 /**
+ * @brief What direction should the wave animate in?
+ */
+enum ctl_frame_wave_type
+{
+  _WAVE_CYCLE            = 0x00,         // Cycle through all wave modes
+  _WAVE_HORIZONTAL       = 0x01,         // Horizontal wave from left to right
+  _WAVE_HORIZONTAL_REV   = 0x06,         // Horizontal wave from right to left
+  _WAVE_VERTICAL         = 0x02,         // Vertical wave from top to bottom
+  _WAVE_VERTICAL_REV     = 0x07,         // Vertical wave from bottom to top
+  _WAVE_CIRC_CENTER_OUT  = 0x03,         // Circular wave from the inside out
+  _WAVE_CIRC_CENTER_IN   = 0x08          // Circular wave from the outside in
+};
+
+/**
  * @brief What effect should be applied?
+ * INFO: Bitmasking is only done for convenience and not done in the
+ * INFO: protocol, hence separate enumerations
  */
 typedef enum ctl_frame_effect
 {
-  COLOR               = 0x01,         // Static color
-  BREATHING           = 0x02,         // Breathing static color
-  CYCLE               = 0x03,         // Cycle through all colors
-  WAVE                = 0x04,         // Multicolor wave
+  EFFECT_COLOR                 = 0x01,                                           // Static color
+  EFFECT_BREATHING             = 0x02,                                           // Breathing static color
+  EFFECT_CYCLE                 = 0x03,                                           // Cycle through all colors
+  _EFFECT_WAVE                 = 0x04,                                           // Wave mode, only used for bitmasking
+  EFFECT_WAVE_CYCLE            = _EFFECT_WAVE | (_WAVE_CYCLE            << 8),   // Wave effect (see corresponding type)
+  EFFECT_WAVE_HORIZONTAL       = _EFFECT_WAVE | (_WAVE_HORIZONTAL       << 8),   // Wave effect (see corresponding type)
+  EFFECT_WAVE_HORIZONTAL_REV   = _EFFECT_WAVE | (_WAVE_HORIZONTAL_REV   << 8),   // Wave effect (see corresponding type)
+  EFFECT_WAVE_VERTICAL         = _EFFECT_WAVE | (_WAVE_VERTICAL         << 8),   // Wave effect (see corresponding type)
+  EFFECT_WAVE_VERTICAL_REV     = _EFFECT_WAVE | (_WAVE_VERTICAL_REV     << 8),   // Wave effect (see corresponding type)
+  EFFECT_WAVE_CIRC_CENTER_OUT  = _EFFECT_WAVE | (_WAVE_CIRC_CENTER_OUT  << 8),   // Wave effect (see corresponding type)
+  EFFECT_WAVE_CIRC_CENTER_IN   = _EFFECT_WAVE | (_WAVE_CIRC_CENTER_IN   << 8)    // Wave effect (see corresponding type)
 } ctl_frame_effect_t;
 
 /**
@@ -80,20 +104,13 @@ typedef struct ctl_frame_color
 } ctl_frame_color_t;
 
 /**
- * @brief What direction should the wave animate in?
+ * @brief What mode to display when booting?
  */
-typedef enum ctl_frame_wave_type
+typedef enum ctl_frame_boot_mode
 {
-  WAVE_CYCLE            = 0x00,         // Cycle through all wave modes
-  WAVE_HORIZONTAL       = 0x01,         // Horizontal wave from left to right
-  WAVE_HORIZONTAL_REV   = 0x06,         // Horizontal wave from right to left
-  WAVE_VERTICAL         = 0x02,         // Vertical wave from top to bottom
-  WAVE_VERTICAL_REV     = 0x07,         // Vertical wave from bottom to top
-  WAVE_CIRC_CENTER_OUT  = 0x03,         // Circular wave from the inside out
-  WAVE_CIRC_CENTER_IN   = 0x08,         // Circular wave from the outside in
-
-  NOT_A_WAVE            = 0xFF          // Use this value for non-wave frames
-} ctl_frame_wave_type_t;
+  BOOT_STORAGE          = 0x01,         // Boot into the user-defined storage
+  BOOT_FACTORY          = 0x02          // Boot into the mode it shipped with
+} ctl_frame_boot_mode_t;
 
 /**
  * @brief Create a zero initialized frame matching a certain type
@@ -112,6 +129,14 @@ uint8_t *ctl_frame_make(ctl_frame_type_t type);
 void ctl_frame_target_apply(uint8_t *frame, ctl_frame_target_t target);
 
 /**
+ * @brief Apply a boot mode to a frame
+ * 
+ * @param frame Frame to apply to
+ * @param boot_mode Boot mode
+ */
+void ctl_frame_boot_mode_apply(uint8_t *frame, ctl_frame_boot_mode_t boot_mode);
+
+/**
  * @brief Apply all parameter's byte(s) needed for a built-in effect
  * 
  * @param frame Frame to apply to
@@ -119,13 +144,14 @@ void ctl_frame_target_apply(uint8_t *frame, ctl_frame_target_t target);
  * @param time Duration/period of the animation, value is ignored for non-timed effects
  * @param color Color of the effect, is ignored for non-colorable effects
  * @param wave_type Type of the wave, is ignored for non-wave effects
+ * @param store Whether or not to write to kbd's persistence
  */
 void ctl_frame_effect_apply(
   uint8_t *frame,
   ctl_frame_effect_t effect,
   uint16_t time,
   ctl_frame_color_t color,
-  ctl_frame_wave_type_t wave_type
+  bool store
 );
 
 #endif
