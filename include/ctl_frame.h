@@ -88,7 +88,7 @@ uint8_t *ctl_frame_make(ctl_frame_type_t type);
  * @param frame Frame to apply to
  * @param target Target
  */
-void keyboard_effect_target_apply(uint8_t *frame, ctl_frame_target_t target);
+void ctl_frame_target_apply(uint8_t *frame, ctl_frame_target_t target);
 
 /**
  * @brief Apply a boot mode to a frame

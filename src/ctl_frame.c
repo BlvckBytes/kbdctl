@@ -40,7 +40,7 @@ uint8_t *ctl_frame_make(ctl_frame_type_t type)
   return mman_ref(res);
 }
 
-void keyboard_effect_target_apply(uint8_t *frame, ctl_frame_target_t target)
+void ctl_frame_target_apply(uint8_t *frame, ctl_frame_target_t target)
 {
   frame[4] = target;
 }
