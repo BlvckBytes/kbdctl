@@ -109,15 +109,15 @@ void ctl_frame_effect_apply(
  */
 #define CTL_FRAME_INSERT_ITEM(frame, frame_ind, items, type, i) \
   { \
-    frame[frame_ind++] = items[i].type; \
-    frame[frame_ind++] = items[i].color.r; \
-    frame[frame_ind++] = items[i].color.g; \
-    frame[frame_ind++] = items[i].color.b; \
+    frame[frame_ind++] = items[i]->type; \
+    frame[frame_ind++] = items[i]->color.r; \
+    frame[frame_ind++] = items[i]->color.g; \
+    frame[frame_ind++] = items[i]->color.b; \
   }
 
 void ctl_frame_key_list_apply(
   uint8_t *frame,
-  keyboard_key_color_t *keys,
+  keyboard_key_color_t **keys,
   size_t num_keys,
   size_t *keys_offs
 )
@@ -133,7 +133,7 @@ void ctl_frame_key_list_apply(
 
 void ctl_frame_status_list_apply(
   uint8_t *frame,
-  keyboard_status_color_t *statuses,
+  keyboard_status_color_t **statuses,
   size_t num_statuses,
   size_t *statuses_offs
 )
