@@ -8,8 +8,8 @@
  */
 typedef enum keyboard_status
 {
-  STATUS_BACKLIGHT             = 0x01 | (KGA_STATUS << 16),     // Backlight enable/disable
-  STATUS_GAME,                                                  // Game mode enable/disable
+  STATUS_BACKLIGHT             = 0x01,   // Backlight enable/disable
+  STATUS_GAME,                           // Game mode enable/disable
 } keyboard_status_t;
 
 #endif
