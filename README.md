@@ -9,7 +9,8 @@ I bought a Logitech G Pro TKL RGB keyboard a few weeks ago, and now I'm sick and
 - [X] Locate the keyboard and get a handle to it
 - [X] Apply static color
 - [X] Apply built in animation
-- [ ] Apply custom key lighting (per key & key groups)
+- [X] Apply custom key lighting
+- [ ] Write a small doc of C-API usage-examples
 - [ ] Create custom animations using key-array frames
 - [ ] Turn this into a daemon using web-sockets
 - [ ] Add the ability to store settings on profiles

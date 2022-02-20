@@ -50,25 +50,31 @@ int main(void)
     return 1;
   }
 
-  scptr uint8_t *data2 = ctl_frame_make(TYPE_EFFECTS);
-  ctl_frame_effect_apply(
-    data2,
-    EFFECT_WAVE_CIRC_CENTER_OUT,
-    500,
-    (ctl_frame_color_t) { 0, 0, 0 },
-    true
-  );
+  scptr uint8_t *data_keys = ctl_frame_make(TYPE_ITEMS);
+  keyboard_key_color_t keys[] = {
+    { KEY_ALT_LEFT, { 0xFF, 0x00, 0x00 } }
+  };
 
-  ctl_frame_target_apply(data2, TARG_KEYS);
+  size_t keys_offs = 0;
+  ctl_frame_key_list_apply(data_keys, keys, sizeof(keys) / sizeof(keyboard_key_color_t), &keys_offs);
 
-  if (!keyboard_transmit(kb, data2, mman_fetch_meta(data2)->num_blocks))
+  if (!keyboard_transmit(kb, data_keys, mman_fetch_meta(data_keys)->num_blocks))
     fprintf(stderr, "Could not transmit data!\n");
 
-  // scptr uint8_t *data = ctl_frame_make(TYPE_BOOT_MODE);
-  // ctl_frame_boot_mode_apply(data, BOOT_STORAGE);
+  scptr uint8_t *data_statuses = ctl_frame_make(TYPE_ITEMS);
+  keyboard_status_color_t statuses[] = {
+    { STATUS_BACKLIGHT, { 0x00, 0x00, 0xFF } }
+  };
 
-  // if (!keyboard_transmit(kb, data, mman_fetch_meta(data)->num_blocks))
-  //   fprintf(stderr, "Could not transmit data!\n");
+  size_t statuses_offs = 0;
+  ctl_frame_status_list_apply(data_statuses, statuses, sizeof(statuses) / sizeof(keyboard_status_color_t), &statuses_offs);
+
+  if (!keyboard_transmit(kb, data_statuses, mman_fetch_meta(data_statuses)->num_blocks))
+    fprintf(stderr, "Could not transmit data!\n");
+
+  scptr uint8_t *data_comm = ctl_frame_make(TYPE_COMMIT);
+  if (!keyboard_transmit(kb, data_comm, mman_fetch_meta(data_comm)->num_blocks))
+    fprintf(stderr, "Could not transmit data!\n");
 
   keyboard_close(kb);
   hid_exit();

@@ -2,7 +2,15 @@
 #define ctl_frame_h
 
 #include <inttypes.h>
+#include <stddef.h>
+
 #include "mman.h"
+#include "keyboard_color.h"
+#include "keyboard_key_color.h"
+#include "keyboard_effect.h"
+#include "keyboard_boot_mode.h"
+#include "keyboard_status_color.h"
+#include "keyboard_group_addr.h"
 
 /* 
   20 byte frame structure:
@@ -17,7 +25,7 @@
   13        -> ctl_frame_wave_type_t
   14        -> 0x64 (unused?)
   15        -> uint8_t as MSB of ctl_frame_time_t (LSB is 12 (shared?)) of WAVE
-  16        -> 0x00 (unused?)
+  16        -> persistence bool (whether or not to store)
   17        -> 0x00 (unused?)
   18        -> 0x00 (unused?)
   19        -> 0x00 (unused?)
@@ -25,7 +33,14 @@
 
 /*
   64 byte frame structure:
-  // TODO: Reverse engineer
+  0         -> ctl_frame_size
+  1         -> 0xFF (delimiter?)
+  2, 3      -> ctl_frame_type
+  4         -> 0x00 (unused?)
+  5         -> keyboard_group_addr_t MSB
+  6         -> 0x00 (unused?)
+  7         -> keyboard_group_addr_t LSB
+  8 - 63    -> [(keyboard_key_t | keyboard_status_t) r, g, b] * (64 - 8 / 4)
 */
 
 /**
@@ -43,9 +58,9 @@ typedef enum ctl_frame_size
  */
 typedef enum ctl_frame_type
 {
-  TYPE_KEYS           = 0x0C3A,       // Control per-key or key-groups
+  TYPE_ITEMS          = 0x0C3A,       // Control individual items (keys / statuses)
   TYPE_COMMIT         = 0x0C5A,       // Commit key-changes
-  TYPE_EFFECTS        = 0x0D3C,       // Control built-in effects
+  TYPE_EFFECT         = 0x0D3C,       // Control built-in effects
   TYPE_DEACTIVATE     = 0x0D3E,       // Deactivate the lighting
   TYPE_BOOT_MODE      = 0x0D5A        // Set up into which mode the kbd will boot
 } ctl_frame_type_t;
@@ -58,59 +73,6 @@ typedef enum ctl_frame_target
   TARG_KEYS           = 0x00,         // This frame will change key lighting
   TARG_LOGO           = 0x01          // This frame will change logo lighting
 } ctl_frame_target_t;
-
-/**
- * @brief What direction should the wave animate in?
- */
-enum ctl_frame_wave_type
-{
-  _WAVE_CYCLE            = 0x00,         // Cycle through all wave modes
-  _WAVE_HORIZONTAL       = 0x01,         // Horizontal wave from left to right
-  _WAVE_HORIZONTAL_REV   = 0x06,         // Horizontal wave from right to left
-  _WAVE_VERTICAL         = 0x02,         // Vertical wave from top to bottom
-  _WAVE_VERTICAL_REV     = 0x07,         // Vertical wave from bottom to top
-  _WAVE_CIRC_CENTER_OUT  = 0x03,         // Circular wave from the inside out
-  _WAVE_CIRC_CENTER_IN   = 0x08          // Circular wave from the outside in
-};
-
-/**
- * @brief What effect should be applied?
- * INFO: Bitmasking is only done for convenience and not done in the
- * INFO: protocol, hence separate enumerations
- */
-typedef enum ctl_frame_effect
-{
-  EFFECT_COLOR                 = 0x01,                                           // Static color
-  EFFECT_BREATHING             = 0x02,                                           // Breathing static color
-  EFFECT_CYCLE                 = 0x03,                                           // Cycle through all colors
-  _EFFECT_WAVE                 = 0x04,                                           // Wave mode, only used for bitmasking
-  EFFECT_WAVE_CYCLE            = _EFFECT_WAVE | (_WAVE_CYCLE            << 8),   // Wave effect (see corresponding type)
-  EFFECT_WAVE_HORIZONTAL       = _EFFECT_WAVE | (_WAVE_HORIZONTAL       << 8),   // Wave effect (see corresponding type)
-  EFFECT_WAVE_HORIZONTAL_REV   = _EFFECT_WAVE | (_WAVE_HORIZONTAL_REV   << 8),   // Wave effect (see corresponding type)
-  EFFECT_WAVE_VERTICAL         = _EFFECT_WAVE | (_WAVE_VERTICAL         << 8),   // Wave effect (see corresponding type)
-  EFFECT_WAVE_VERTICAL_REV     = _EFFECT_WAVE | (_WAVE_VERTICAL_REV     << 8),   // Wave effect (see corresponding type)
-  EFFECT_WAVE_CIRC_CENTER_OUT  = _EFFECT_WAVE | (_WAVE_CIRC_CENTER_OUT  << 8),   // Wave effect (see corresponding type)
-  EFFECT_WAVE_CIRC_CENTER_IN   = _EFFECT_WAVE | (_WAVE_CIRC_CENTER_IN   << 8)    // Wave effect (see corresponding type)
-} ctl_frame_effect_t;
-
-/**
- * @brief 24 bit LED color
- */
-typedef struct ctl_frame_color
-{
-  uint8_t r;                           // 0x00-0xFF red value
-  uint8_t g;                           // 0x00-0xFF green value
-  uint8_t b;                           // 0x00-0xFF blue value
-} ctl_frame_color_t;
-
-/**
- * @brief What mode to display when booting?
- */
-typedef enum ctl_frame_boot_mode
-{
-  BOOT_STORAGE          = 0x01,         // Boot into the user-defined storage
-  BOOT_FACTORY          = 0x02          // Boot into the mode it shipped with
-} ctl_frame_boot_mode_t;
 
 /**
  * @brief Create a zero initialized frame matching a certain type
@@ -126,7 +88,7 @@ uint8_t *ctl_frame_make(ctl_frame_type_t type);
  * @param frame Frame to apply to
  * @param target Target
  */
-void ctl_frame_target_apply(uint8_t *frame, ctl_frame_target_t target);
+void keyboard_effect_target_apply(uint8_t *frame, ctl_frame_target_t target);
 
 /**
  * @brief Apply a boot mode to a frame
@@ -134,7 +96,7 @@ void ctl_frame_target_apply(uint8_t *frame, ctl_frame_target_t target);
  * @param frame Frame to apply to
  * @param boot_mode Boot mode
  */
-void ctl_frame_boot_mode_apply(uint8_t *frame, ctl_frame_boot_mode_t boot_mode);
+void ctl_frame_boot_mode_apply(uint8_t *frame, keyboard_boot_mode_t boot_mode);
 
 /**
  * @brief Apply all parameter's byte(s) needed for a built-in effect
@@ -148,10 +110,42 @@ void ctl_frame_boot_mode_apply(uint8_t *frame, ctl_frame_boot_mode_t boot_mode);
  */
 void ctl_frame_effect_apply(
   uint8_t *frame,
-  ctl_frame_effect_t effect,
+  keyboard_effect_t effect,
   uint16_t time,
-  ctl_frame_color_t color,
+  keyboard_color_t color,
   bool store
+);
+
+/**
+ * @brief Apply the maximum number of keys and set the last applied offset
+ * within the list of keys in order to be picked up by another issued request later
+ * 
+ * @param frame Frame to apply to
+ * @param keys List of keys with their corresponding color
+ * @param num_keys Number of keys in that list
+ * @param keys_offs Offset within the keys list, done when keys_offs == num_keys
+ */
+void ctl_frame_key_list_apply(
+  uint8_t *frame,
+  keyboard_key_color_t *keys,
+  size_t num_keys,
+  size_t *keys_offs
+);
+
+/**
+ * @brief Apply the maximum number of statuses and return the last applied offset
+ * within the list of statuses in order to be picked up by another issued request later
+ * 
+ * @param frame Frame to apply to
+ * @param statuses List of statuses with their corresponding color
+ * @param num_statuses Number of statuses in that list
+ * @param statuses_offs Offset within the statuses list, done when statuses_offs == num_statuses
+*/
+void ctl_frame_status_list_apply(
+  uint8_t *frame,
+  keyboard_status_color_t *statuses,
+  size_t num_statuses,
+  size_t *statuses_offs
 );
 
 #endif
