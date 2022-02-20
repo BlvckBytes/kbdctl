@@ -7,6 +7,9 @@
 #include "common_macros.h"
 #include "mman.h"
 
+/**
+ * @brief Represents the keyboard device and all it's necessary data
+ */
 typedef struct keyboard
 {
   char *serial_str;               // Product serial number
@@ -15,7 +18,7 @@ typedef struct keyboard
 
   uint16_t vendor_id;             // USB Vendor ID
   uint16_t product_id;            // USB Product ID
-  wchar_t *serial;          // Device serial
+  wchar_t *serial;                // Device serial
 
   hid_device *handle;             // Device connection handle
 } keyboard_t;

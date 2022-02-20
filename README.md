@@ -4,6 +4,13 @@
 
 I bought a Logitech G Pro TKL RGB keyboard a few weeks ago, and now I'm sick and tired of the `Logitech G HUB` bloatware I need to install just to alter the lightshow. This is why I'm writing this barebones cli controller, to finally take care of business.
 
+# Table of Contents
+
+* [ToDo](#todo)
+* [Dependencies](#dependencies)
+* [Building](#building)
+* [Reversing The Protocol](#reversing-the-protocol)
+
 ## ToDo
 
 - [X] Locate the keyboard and get a handle to it
@@ -16,11 +23,25 @@ I bought a Logitech G Pro TKL RGB keyboard a few weeks ago, and now I'm sick and
 - [ ] Add the ability to store settings on profiles
 - [ ] Just maybe... add a GUI?
 
-## Usage
+## Dependencies
 
-The controller will only work with the G-Pro, as protocols are not open-source and I'm neither having other keyboards within reach nor the time and dedication to work their protocols out. This is more of a hobby/fun project. To use the software, you only need `hidapi`. The makefile specifies dependencies in homebrews directory (`/opt/homebrew`), if you got your dependencies from somewhere else, alter the makefile.
+The controller will only work with the G-Pro, as protocols are not open-source and I'm neither having other keyboards within reach nor the time and dedication to work their protocols out. This is more of a hobby/fun project.
 
-After making sure the dependency is installed, just run `make`, or `make clean && make` after changes.
+I'm running macOS, but I don't think there should be anything holding you back from installing this on a linux machine, as nothing in the codebase is macOS specific.
+
+To use the software, you only need `hidapi`. The makefile specifies dependencies in homebrews directory (`/opt/homebrew`), if you got your dependencies from somewhere else, alter the makefile.
+
+```bash
+brew install hidapi
+```
+
+## Building
+
+After making sure the dependencys are installed, just run:
+
+```bash
+make clean && make
+```
 
 ## Reversing The Protocol
 
