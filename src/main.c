@@ -8,7 +8,7 @@
 #include "ctl_frame.h"
 #include "util/dynarr.h"
 #include "util/htable.h"
-#include "keymap_parser.h"
+#include "util/iniparse.h"
 
 // Vendor- and product-id of the target device
 #define TKB_VID 0x046D
@@ -124,11 +124,11 @@ int process(void)
 {
   // Parse and print the keymap
   scptr char *err = NULL;
-  scptr htable_t *keymap = keymap_parser_parse(KEYMAP_FLOC, &err);
+  scptr htable_t *keymap = iniparse(KEYMAP_FLOC, &err);
   if (!keymap)
     fprintf(stderr, "ERROR: Could not parse the keymap at " QUOTSTR ": %s\n", KEYMAP_FLOC, err);
   else
-    keymap_parser_print(keymap);
+    iniparse_print(keymap);
 
   struct hid_device_info *henum, *dev;
   hid_init();
@@ -189,10 +189,8 @@ int process(void)
 
   keyboard_close(kb);
   hid_exit();
-
   return 0;
 }
-
 
 int main(void)
 {

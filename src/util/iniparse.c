@@ -1,16 +1,16 @@
-#include "keymap_parser.h"
+#include "util/iniparse.h"
 
-#define keymap_parser_err(fmt, ...) \
+#define iniparse_err(fmt, ...) \
   { \
-    *err = mman_alloc(sizeof(char), KEYMAP_PARSER_ERROR_INIT_LEN, NULL); \
+    *err = mman_alloc(sizeof(char), INIPARSE_ERROR_INIT_LEN, NULL); \
     strfmt(err, NULL, fmt, ##__VA_ARGS__); \
     return NULL; \
   }
 
-htable_t *keymap_parser_parse(const char *floc, char **err)
+htable_t *iniparse(const char *floc, char **err)
 {
-  // Allocate outer "language section" table
-  scptr htable_t *langs = htable_make(KEYMAP_PARSER_MAX_LANGS, mman_dealloc_nr);
+  // Allocate outer section table
+  scptr htable_t *secs = htable_make(INIPARSE_MAX_SECS, mman_dealloc_nr);
 
   // Open keymap file
   FILE *f = fopen(floc, "r");
@@ -20,7 +20,9 @@ htable_t *keymap_parser_parse(const char *floc, char **err)
   size_t read_len, buf_len, line_ind = 0;
   char *line = NULL;
 
-  htable_t *curr_lang = NULL;
+  // Section currently in
+  // This will change over time as the file is scanned from top to bottom
+  htable_t *curr_sec = NULL;
 
   // Read this file line by line
   while ((read_len = getline(&line, &buf_len, f)) != -1) {
@@ -43,29 +45,31 @@ htable_t *keymap_parser_parse(const char *floc, char **err)
     size_t san_line_len = strlen(san_line);
     if (san_line[0] == '[' && san_line[san_line_len - 1] == ']')
     {
-      scptr char *lang = substr(san_line, 1, san_line_len - 2);
+      scptr char *sec = substr(san_line, 1, san_line_len - 2);
 
       // Invalid section begin occurred
-      if (lang == NULL)
-        keymap_parser_err("Invalid section-begin occurred in line %lu!", line_ind);
+      if (sec == NULL)
+        iniparse_err("Invalid section-begin occurred in line %lu!", line_ind);
 
-      // This section's language is already known
-      if (htable_contains(langs, lang))
-        htable_fetch(langs, lang, (void **) &curr_lang);
+      // This section's name is already known
+      if (htable_contains(secs, sec))
+        htable_fetch(secs, sec, (void **) &curr_sec);
       
-      // Create new language
+      // Create new section
       else
       {
-        scptr htable_t *mappings = htable_make(KEYMAP_PARSER_MAX_KEYS, mman_dealloc_nr);
-        htable_insert(langs, lang, mman_ref(mappings));
-        curr_lang = mappings;
+        scptr htable_t *mappings = htable_make(INIPARSE_MAX_KEYS, mman_dealloc_nr);
+        htable_insert(secs, sec, mman_ref(mappings));
+        curr_sec = mappings;
       }
 
+      // Next iterations will place their k=v pairs into the current section
       continue;
     }
 
-    if (!curr_lang)
-      keymap_parser_err("Found keys before section-start in line %lu!", line_ind);
+    // Not in a section but already at a key
+    if (!curr_sec)
+      iniparse_err("Found keys before section-start in line %lu!", line_ind);
 
     // Split on =
     size_t kv_offs = 0;
@@ -73,7 +77,7 @@ htable_t *keymap_parser_parse(const char *floc, char **err)
     scptr char *value = partial_strdup(san_line, &kv_offs, "\0", false);
 
     // Insert kv pair
-    htable_insert(curr_lang, key, mman_ref(value));
+    htable_insert(curr_sec, key, mman_ref(value));
   }
 
   // Free linebuffer alloced by getline, if applicable
@@ -81,19 +85,19 @@ htable_t *keymap_parser_parse(const char *floc, char **err)
   if (line) free(line);
   fclose(f);
 
-  return mman_ref(langs);
+  return mman_ref(secs);
 }
 
-static char *keymap_parser_stringify_mappings(void *item)
+static char *iniparse_stringify_kv(void *item)
 {
-  htable_t *mappings = (htable_t *) item;
+  htable_t *pairs = (htable_t *) item;
 
   // Allocate resulting string buffer
-  scptr char *res = (char *) mman_alloc(sizeof(char), KEYMAP_PARSER_MAPPINGS_PRINT_INIT_LEN, NULL);
+  scptr char *res = (char *) mman_alloc(sizeof(char), INIPARSE_MAPPINGS_PRINT_INIT_LEN, NULL);
 
   // List all keys (remappings)
   scptr char **keys = NULL;
-  htable_list_keys(mappings, &keys);
+  htable_list_keys(pairs, &keys);
 
   // Iterate keys
   size_t res_offs = 0;
@@ -101,7 +105,7 @@ static char *keymap_parser_stringify_mappings(void *item)
   {
     // Get the mapping destination
     char *value = NULL;
-    htable_fetch(mappings, *key, (void **) &value);
+    htable_fetch(pairs, *key, (void **) &value);
 
     // Print k=v pairs with comma separators
     strfmt(&res, &res_offs, "%s%s=%s", key == keys ? "" : ", ", *key, value);
@@ -110,9 +114,9 @@ static char *keymap_parser_stringify_mappings(void *item)
   return mman_ref(res);
 }
 
-void keymap_parser_print(htable_t *keymap)
+void iniparse_print(htable_t *keymap)
 {
   printf("Parsed keymap:\n");
-  scptr char *dump = htable_dump_hr(keymap, keymap_parser_stringify_mappings);
+  scptr char *dump = htable_dump_hr(keymap, iniparse_stringify_kv);
   printf("%s", dump);
 }
