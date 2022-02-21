@@ -10,7 +10,7 @@
 htable_t *keymap_parser_parse(const char *floc, char **err)
 {
   // Allocate outer "language section" table
-  scptr htable_t *langs = htable_make(KEYMAP_PARSER_MAX_LANGS, mman_dealloc);
+  scptr htable_t *langs = htable_make(KEYMAP_PARSER_MAX_LANGS, mman_dealloc_nr);
 
   // Open keymap file
   FILE *f = fopen(floc, "r");
@@ -56,7 +56,7 @@ htable_t *keymap_parser_parse(const char *floc, char **err)
       // Create new language
       else
       {
-        scptr htable_t *mappings = htable_make(KEYMAP_PARSER_MAX_KEYS, mman_dealloc);
+        scptr htable_t *mappings = htable_make(KEYMAP_PARSER_MAX_KEYS, mman_dealloc_nr);
         htable_insert(langs, lang, mman_ref(mappings));
         curr_lang = mappings;
       }
@@ -100,8 +100,8 @@ static char *keymap_parser_stringify_mappings(void *item)
   for (char **key = keys; *key; key++)
   {
     // Get the mapping destination
-    char *value;
-    htable_fetch(mappings, *key, &value);
+    char *value = NULL;
+    htable_fetch(mappings, *key, (void **) &value);
 
     // Print k=v pairs with comma separators
     strfmt(&res, &res_offs, "%s%s=%s", key == keys ? "" : ", ", *key, value);

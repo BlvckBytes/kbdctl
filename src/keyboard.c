@@ -22,7 +22,7 @@ void keyboard_print(keyboard_t *kb)
 keyboard_t *keyboard_from_hdi(struct hid_device_info *hdi)
 {
   // Create and set default values
-  keyboard_t *kb = (keyboard_t *) mman_alloc(sizeof(keyboard_t), 1, keyboard_cleanup);
+  scptr keyboard_t *kb = (keyboard_t *) mman_alloc(sizeof(keyboard_t), 1, keyboard_cleanup);
 
   // Copy serial number if hdi has a value
   if (hdi->serial_number)

@@ -21,14 +21,17 @@
 INLINED static void test_loop_keys(keyboard_t *kb, keyboard_color_t color)
 {
   // Create dynamic array where all key colors are stored
-  scptr dynarr_t *keys = dynarr_make(16, 256, mman_dealloc);
+  scptr dynarr_t *keys = dynarr_make(16, 256, mman_dealloc_nr);
 
   // Iterate full range of keys
   for (size_t i = KEY_A; i <= KEY_WIN_RIGHT; i++)
   {
     // Create current key-color and push into array
-    keyboard_key_color_t *key_color = keyboard_key_color_make(i, color);
-    dynarr_push(keys, key_color, NULL);
+    scptr keyboard_key_color_t *key_color = keyboard_key_color_make(i, color);
+
+    // Dealloc this color it it didn't fit into the array anymore
+    if (dynarr_push(keys, mman_ref(key_color), NULL) != dynarr_SUCCESS)
+      mman_dealloc(key_color);
 
     // Get current key array state
     scptr keyboard_key_color_t **key_arr = NULL;
@@ -51,14 +54,11 @@ INLINED static void test_loop_keys(keyboard_t *kb, keyboard_color_t color)
     if (!keyboard_transmit(kb, data_comm, mman_fetch_meta(data_comm)->num_blocks))
       fprintf(stderr, "Could not transmit data!\n");
 
-    // Short delay
-    usleep(1000 * 100);
+    // Short delay between keys
+    usleep(1000 * 50);
 
     // Skip gap
     if (i == KEY_MENU) i = KEY_CTRL_LEFT - 1;
-
-    // Skip unsupported keys
-    else if (i == KEY_Z) i = KEY_N0;
   }
 }
 
@@ -173,7 +173,7 @@ int process(void)
 
   // test_apply_effect(kb, EFFECT_WAVE_CIRC_CENTER_IN, TARG_KEYS, 800, (keyboard_color_t) { 0x00, 0x00, 0x00 });
   // test_apply_effect(kb, EFFECT_WAVE_CIRC_CENTER_OUT, TARG_KEYS, 800, (keyboard_color_t) { 0x00, 0x00, 0x00 });
-  // test_apply_effect(kb, EFFECT_WAVE_HORIZONTAL, TARG_KEYS, 800, (keyboard_color_t) { 0x00, 0x00, 0x00 });
+  test_apply_effect(kb, EFFECT_WAVE_HORIZONTAL, TARG_KEYS, 800, (keyboard_color_t) { 0x00, 0x00, 0x00 });
   // test_apply_effect(kb, EFFECT_WAVE_HORIZONTAL_REV, TARG_KEYS, 800, (keyboard_color_t) { 0x00, 0x00, 0x00 });
   // test_apply_effect(kb, EFFECT_WAVE_VERTICAL, TARG_KEYS, 800, (keyboard_color_t) { 0x00, 0x00, 0x00 });
   // test_apply_effect(kb, EFFECT_WAVE_VERTICAL_REV, TARG_KEYS, 800, (keyboard_color_t) { 0x00, 0x00, 0x00 });
@@ -183,7 +183,7 @@ int process(void)
   // test_apply_effect(kb, EFFECT_BREATHING, TARG_LOGO, 1000, (keyboard_color_t) { 0x00, 0x00, 0xFF });
   // test_apply_status_color(kb, (keyboard_color_t) { 0xFF, 0x00, 0x00 });
   // test_boot_mode(kb, BOOT_FACTORY);
-  // test_loop_keys(kb, (keyboard_color_t) { 0xFF, 0x00, 0xFF });
+  // test_loop_keys(kb, (keyboard_color_t) { 0x00, 0xFF, 0x00 });
   // test_deactivate(kb, TARG_LOGO);
   // test_deactivate(kb, TARG_KEYS);
 

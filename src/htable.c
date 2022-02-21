@@ -9,7 +9,6 @@ static void htable_slot_cleanup(htable_entry_t *slot, cleanup_fn_t cf)
   if (cf && slot->value) cf(slot->value);
 
   // Free the cloned string key
-  mman_meta_t *meta = mman_fetch_meta(slot->key);
   mman_dealloc(slot->key);
 
   // Free the next chain in the linked list, if applicable

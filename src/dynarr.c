@@ -1,28 +1,20 @@
 #include "dynarr.h"
 
 /**
- * @brief Clean up individual items
- */
-INLINED static void dynarr_item_cleanup(void *ref, cleanup_fn_t cf)
-{
-  cf(ref);
-}
-
-/**
  * @brief Clean up a no longer needed dynarr struct and all of it's items
  */
 INLINED static void dynarr_cleanup(mman_meta_t *ref)
 {
-  dynarr_t *dynarr = (dynarr_t *) ref;
+  dynarr_t *dynarr = (dynarr_t *) ref->ptr;
 
   // Clean up items if applicable
   if (dynarr->_cf)
   {
     for (size_t i = 0; i < dynarr->_array_size; i++)
-      dynarr_item_cleanup(dynarr->items[i], dynarr->_cf);
+      dynarr->_cf(dynarr->items[i]);
   }
 
-  // Free the item pointers
+  // Dealloc the item pointers
   mman_dealloc(dynarr->items);
 }
 
@@ -45,8 +37,7 @@ dynarr_t *dynarr_make(size_t array_size, size_t array_max_size, cleanup_fn_t cf)
 INLINED static void dynarr_resize_arr(dynarr_t *arr, size_t new_size)
 {
   // Resize memory block of the array
-  mman_meta_t *new_arr = mman_realloc((void **) &arr->items, sizeof(void *), new_size);
-  arr->items = mman_ref(new_arr->ptr);
+  arr->items = mman_realloc((void **) &arr->items, sizeof(void *), new_size)->ptr;
   
   // Initialize new slots
   for (size_t i = arr->_array_size; i < new_size; i++)
@@ -185,7 +176,7 @@ size_t dynarr_as_array(dynarr_t *arr, void ***out)
   if (active_slots == 0) return 0;
 
   // Create array
-  void **res = (void **) mman_alloc(sizeof(void *), active_slots, NULL);
+  scptr void **res = (void **) mman_alloc(sizeof(void *), active_slots, NULL);
 
   // Copy over pointers
   size_t res_index = 0;

@@ -114,32 +114,45 @@ mman_meta_t *mman_realloc(void **ptr_ptr, size_t block_size, size_t num_blocks)
 ============================================================================
 */
 
-void mman_dealloc_force(void *ptr)
+mman_result_t mman_dealloc_force(void *ptr)
 {
   mman_meta_t *meta = mman_fetch_meta(ptr);
-  if (!meta) return;
+  if (!meta)
+  {
+    fprintf(stderr, "ERROR: mman_dealloc_force received unknown ref!\n");
+    return MMAN_INVREF;
+  }
 
   // Call additional cleanup function, if applicable
   if (meta->cf) meta->cf(meta);
 
   // Free the whole allocated (meta- + data-) blocks by the head-ptr
   free(meta);
-  meta = NULL;
 
   // INFO: Increment the deallocation count for debugging purposes
   atomic_increment(&mman_dealloc_count);
+  return MMAN_DEALLOCED;
 }
 
-void mman_dealloc(void *ptr)
+mman_result_t mman_dealloc(void *ptr)
 {
-  if (!ptr) return;
+  if (!ptr) return MMAN_NULLREF;
   mman_meta_t *meta = mman_fetch_meta(ptr);
-  if (!meta) return;
+  if (!meta)
+  {
+    fprintf(stderr, "ERROR: mman_dealloc received unknown ref!\n");
+    return MMAN_INVREF;
+  }
 
   // Decrease number of active references
   // Do nothing as long as active references remain
-  if (atomic_decrement(&meta->refs) > 0) return;
-  mman_dealloc_force(meta->ptr);
+  if (atomic_decrement(&meta->refs) > 0) return MMAN_STILL_USED;
+  return mman_dealloc_force(meta->ptr);
+}
+
+void mman_dealloc_nr(void *ptr)
+{
+  mman_dealloc(ptr);
 }
 
 void mman_dealloc_attr(void *ptr_ptr)

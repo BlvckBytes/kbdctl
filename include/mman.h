@@ -54,6 +54,14 @@ typedef struct mman_meta
   volatile size_t refs;
 } mman_meta_t;
 
+typedef enum mman_result
+{
+  MMAN_NULLREF,             // Null reference received
+  MMAN_INVREF,              // Invalid reference received (not mman allocated)
+  MMAN_STILL_USED,          // This resource is still in use
+  MMAN_DEALLOCED            // Successfully deallocated
+} mman_result_t;
+
 /*
 ============================================================================
                                  Meta Info                                  
@@ -118,17 +126,28 @@ mman_meta_t *mman_realloc(void **ptr_ptr, size_t block_size, size_t num_blocks);
  * as a force deallocator!
  * 
  * @param ptr Pointer to the resource
+ * 
+ * @returns mman_result_t Operation result
  */
-void mman_dealloc_force(void *ptr);
+mman_result_t mman_dealloc_force(void *ptr);
 
 /**
  * @brief Deallocate a managed resource when it goes out of scope and
- * has no references left pointing at it.
+ * has no references left pointing at it. Returns the operation result.
  * 
+ * @param ptr Pointer to the resource
+ * 
+ * @returns mman_result_t Operation result
+ */
+mman_result_t mman_dealloc(void *ptr);
+
+/**
+ * @brief Deallocate a managed resource when it goes out of scope and
+ * has no references left pointing at it. Doesn't return an operation result.
  * 
  * @param ptr Pointer to the resource
  */
-void mman_dealloc(void *ptr);
+void mman_dealloc_nr(void *ptr);
 
 /**
  * @brief Deallocate a managed resource when it goes out of scope and
