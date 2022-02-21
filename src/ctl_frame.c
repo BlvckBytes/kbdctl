@@ -97,24 +97,6 @@ void ctl_frame_effect_apply(
     frame[13] = (effect >> 8) & 0xFF;
 }
 
-/**
- * @brief Inserts an item into a frame based on the current frame-index
- * and the item's type, modifies the frame_index in place
- * 
- * @param frame Frame to insert into, uint8_t *
- * @param frame_index Frame index tracker, size_t *
- * @param items List of items to append, (keyboard_key_color_t | keyboard_status_color_t) *
- * @param type Type of items, key or status
- * @param i Index in list of items, size_t
- */
-#define CTL_FRAME_INSERT_ITEM(frame, frame_ind, items, type, i) \
-  { \
-    frame[frame_ind++] = items[i]->type; \
-    frame[frame_ind++] = items[i]->color.r; \
-    frame[frame_ind++] = items[i]->color.g; \
-    frame[frame_ind++] = items[i]->color.b; \
-  }
-
 void ctl_frame_key_list_apply(
   uint8_t *frame,
   keyboard_key_color_t **keys,
@@ -122,27 +104,18 @@ void ctl_frame_key_list_apply(
   size_t *keys_offs
 )
 {
-  // Apply group address
-  frame[5] = (KGA_KEY >> 8) & 0xFF;
-  frame[7] = (KGA_KEY >> 0) & 0xFF;
+  if (num_keys == 0) return;
+
+  // Apply group address (two MSBs of the key)
+  frame[5] = (keys[0]->key >> 24) & 0xFF;
+  frame[7] = (keys[0]->key >> 16) & 0xFF;
 
   size_t frame_ind = 8;
   for(; *keys_offs < num_keys && frame_ind < 63; (*keys_offs)++)
-    CTL_FRAME_INSERT_ITEM(frame, frame_ind, keys, key, *keys_offs);
-}
-
-void ctl_frame_status_list_apply(
-  uint8_t *frame,
-  keyboard_status_color_t **statuses,
-  size_t num_statuses,
-  size_t *statuses_offs
-)
-{
-  // Apply group address
-  frame[5] = (KGA_STATUS >> 8) & 0xFF;
-  frame[7] = (KGA_STATUS >> 0) & 0xFF;
-
-  size_t frame_ind = 8;
-  for(; *statuses_offs < num_statuses && frame_ind < 63; (*statuses_offs)++)
-    CTL_FRAME_INSERT_ITEM(frame, frame_ind, statuses, status, *statuses_offs);
+  {
+    frame[frame_ind++] = (keys[*keys_offs]->key) & 0xFF;
+    frame[frame_ind++] = keys[*keys_offs]->color.r;
+    frame[frame_ind++] = keys[*keys_offs]->color.g;
+    frame[frame_ind++] = keys[*keys_offs]->color.b;
+  }
 }

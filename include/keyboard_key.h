@@ -4,12 +4,14 @@
 #include <stddef.h>
 #include <string.h>
 
+#include "keyboard_group_addr.h"
+
 /**
  * @brief Keyboard keys and their corresponding address
  */
 typedef enum keyboard_key
 {
-  KEY_A                        = 0x04,
+  KEY_A                        = 0x04 | (KGA_KEY    << 16),
   KEY_B,
   KEY_C,
   KEY_D,
@@ -108,14 +110,17 @@ typedef enum keyboard_key
   KEY_INTL_BACKSLASH,
   KEY_MENU,
 
-  KEY_CTRL_LEFT                = 0xE0,
+  KEY_CTRL_LEFT                = 0xE0 | (KGA_KEY    << 16),
   KEY_SHIFT_LEFT,
   KEY_ALT_LEFT,
   KEY_WIN_LEFT,
   KEY_CTRL_RIGHT,
   KEY_SHIFT_RIGHT,
   KEY_ALT_RIGHT,
-  KEY_WIN_RIGHT
+  KEY_WIN_RIGHT,
+
+  KEY_STATUS_BACKLIGHT         = 0x01 | (KGA_STATUS << 16),
+  KEY_STATUS_GAME
 } keyboard_key_t;
 
 /**

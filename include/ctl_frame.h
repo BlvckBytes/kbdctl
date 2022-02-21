@@ -9,7 +9,6 @@
 #include "keyboard_key_color.h"
 #include "keyboard_effect.h"
 #include "keyboard_boot_mode.h"
-#include "keyboard_status_color.h"
 #include "keyboard_group_addr.h"
 
 /* 
@@ -120,6 +119,8 @@ void ctl_frame_effect_apply(
  * @brief Apply the maximum number of keys and set the last applied offset
  * within the list of keys in order to be picked up by another issued request later
  * 
+ * WARNING: The key-list entries need to be of the same key-group!
+ * 
  * @param frame Frame to apply to
  * @param keys List of keys with their corresponding color
  * @param num_keys Number of keys in that list
@@ -130,22 +131,6 @@ void ctl_frame_key_list_apply(
   keyboard_key_color_t **keys,
   size_t num_keys,
   size_t *keys_offs
-);
-
-/**
- * @brief Apply the maximum number of statuses and return the last applied offset
- * within the list of statuses in order to be picked up by another issued request later
- * 
- * @param frame Frame to apply to
- * @param statuses List of statuses with their corresponding color
- * @param num_statuses Number of statuses in that list
- * @param statuses_offs Offset within the statuses list, done when statuses_offs == num_statuses
-*/
-void ctl_frame_status_list_apply(
-  uint8_t *frame,
-  keyboard_status_color_t **statuses,
-  size_t num_statuses,
-  size_t *statuses_offs
 );
 
 #endif

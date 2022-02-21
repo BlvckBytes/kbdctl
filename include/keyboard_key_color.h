@@ -6,7 +6,7 @@
 #include "util/mman.h"
 
 /**
- * @brief Groups a key to it's requested color
+ * @brief Groups a key with it's requested color
  */
 typedef struct keyboard_key_color
 {
