@@ -19,7 +19,7 @@ uint8_t *ctl_frame_make(ctl_frame_type_t type)
       break;
 
     // Items have 64B frames
-    case TYPE_ITEMS:
+    case TYPE_KEYS:
       frame_size = 64;
       res = mman_calloc(sizeof(uint8_t), frame_size, NULL);
       res[0] = SIXTYFOUR_BYTES;
@@ -101,14 +101,13 @@ void ctl_frame_key_list_apply(
   uint8_t *frame,
   keyboard_key_color_t **keys,
   size_t num_keys,
+  keyboard_group_addr_t key_group,
   size_t *keys_offs
 )
 {
-  if (num_keys == 0) return;
-
   // Apply group address (two MSBs of the key)
-  frame[5] = (keys[0]->key >> 24) & 0xFF;
-  frame[7] = (keys[0]->key >> 16) & 0xFF;
+  frame[5] = (key_group >> 8) & 0xFF;
+  frame[7] = (key_group >> 0) & 0xFF;
 
   size_t frame_ind = 8;
   for(; *keys_offs < num_keys && frame_ind < 63; (*keys_offs)++)

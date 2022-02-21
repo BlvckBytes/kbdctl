@@ -4,7 +4,7 @@
 /**
  * @brief The group's address a keyboard item is residing in
  */
-enum keyboard_group_addr
+typedef enum keyboard_group_addr
 {
   KGA_STATUS                    = 0x4005,       // Status LEDs (backlight, game-mode)
   KGA_KEY                       = 0x010E        // Individual keys

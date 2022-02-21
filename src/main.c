@@ -38,13 +38,13 @@ INLINED static void test_loop_keys(keyboard_t *kb, keyboard_color_t color)
     size_t num_keys = dynarr_as_array(keys, (void ***) &key_arr);
 
     // Make items frame
-    scptr uint8_t *data_keys = ctl_frame_make(TYPE_ITEMS);
+    scptr uint8_t *data_keys = ctl_frame_make(TYPE_KEYS);
 
     // Append all keys and send, may take multiple frames as one frame has limited capacity
     size_t keys_offs = 0;
     while (num_keys != keys_offs)
     {
-      ctl_frame_key_list_apply(data_keys, key_arr, num_keys, &keys_offs);
+      ctl_frame_key_list_apply(data_keys, key_arr, num_keys, KGA_KEY, &keys_offs);
       if (!keyboard_transmit(kb, data_keys, mman_fetch_meta(data_keys)->num_blocks))
         fprintf(stderr, "Could not transmit data!\n");
     }
@@ -86,13 +86,13 @@ INLINED static void test_apply_status_color
 )
 {
   // Create items frame and both available status colors
-  scptr uint8_t *data = ctl_frame_make(TYPE_ITEMS);
+  scptr uint8_t *data = ctl_frame_make(TYPE_KEYS);
   scptr keyboard_key_color_t *stat_backl = keyboard_key_color_make(KEY_STATUS_BACKLIGHT, color);
   scptr keyboard_key_color_t *stat_game = keyboard_key_color_make(KEY_STATUS_GAME, color);
   keyboard_key_color_t *keys_arr[] = {stat_backl, stat_game};
 
   size_t num_keys = sizeof(keys_arr) / sizeof(keyboard_key_color_t *), statuses_offs = 0;
-  ctl_frame_key_list_apply(data, keys_arr, num_keys, &statuses_offs);
+  ctl_frame_key_list_apply(data, keys_arr, num_keys, KGA_STATUS, &statuses_offs);
   if (!keyboard_transmit(kb, data, mman_fetch_meta(data)->num_blocks))
     fprintf(stderr, "Could not transmit data!\n");
 
@@ -181,7 +181,7 @@ int process(void)
   // test_apply_effect(kb, EFFECT_CYCLE, TARG_KEYS, 8000, (keyboard_color_t) { 0x00, 0x00, 0x00 });
   // test_apply_effect(kb, EFFECT_BREATHING, TARG_KEYS, 800, (keyboard_color_t) { 0x00, 0x00, 0xFF });
   // test_apply_effect(kb, EFFECT_BREATHING, TARG_LOGO, 1000, (keyboard_color_t) { 0x00, 0x00, 0xFF });
-  // test_apply_status_color(kb, (keyboard_color_t) { 0xFF, 0x00, 0xFF });
+  test_apply_status_color(kb, (keyboard_color_t) { 0xFF, 0x00, 0x00 });
   // test_boot_mode(kb, BOOT_FACTORY);
   // test_loop_keys(kb, (keyboard_color_t) { 0x00, 0xFF, 0x00 });
   // test_deactivate(kb, TARG_LOGO);

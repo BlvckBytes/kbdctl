@@ -57,7 +57,7 @@ typedef enum ctl_frame_size
  */
 typedef enum ctl_frame_type
 {
-  TYPE_ITEMS          = 0x0C3A,       // Control individual items (keys / statuses)
+  TYPE_KEYS           = 0x0C3A,       // Control individual items (keys / statuses)
   TYPE_COMMIT         = 0x0C5A,       // Commit key-changes
   TYPE_EFFECT         = 0x0D3C,       // Control built-in effects
   TYPE_DEACTIVATE     = 0x0D3E,       // Deactivate the lighting
@@ -119,17 +119,17 @@ void ctl_frame_effect_apply(
  * @brief Apply the maximum number of keys and set the last applied offset
  * within the list of keys in order to be picked up by another issued request later
  * 
- * WARNING: The key-list entries need to be of the same key-group!
- * 
  * @param frame Frame to apply to
  * @param keys List of keys with their corresponding color
  * @param num_keys Number of keys in that list
+ * @param key_group Group these keys are residing in
  * @param keys_offs Offset within the keys list, done when keys_offs == num_keys
  */
 void ctl_frame_key_list_apply(
   uint8_t *frame,
   keyboard_key_color_t **keys,
   size_t num_keys,
+  keyboard_group_addr_t key_group,
   size_t *keys_offs
 );
 
