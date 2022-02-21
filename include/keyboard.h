@@ -3,9 +3,9 @@
 
 #include <hidapi/hidapi.h>
 
-#include "strconv.h"
-#include "common_macros.h"
-#include "mman.h"
+#include "util/strconv.h"
+#include "util/common_macros.h"
+#include "util/mman.h"
 
 /**
  * @brief Represents the keyboard device and all it's necessary data

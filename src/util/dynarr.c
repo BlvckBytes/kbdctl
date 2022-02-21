@@ -1,4 +1,4 @@
-#include "dynarr.h"
+#include "util/dynarr.h"
 
 /**
  * @brief Clean up a no longer needed dynarr struct and all of it's items

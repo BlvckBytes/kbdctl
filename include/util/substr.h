@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "mman.h"
+#include "util/mman.h"
 
 /**
  * @brief Get a defined region as a copy from an input string

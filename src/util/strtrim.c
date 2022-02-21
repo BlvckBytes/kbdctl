@@ -1,4 +1,4 @@
-#include "strtrim.h"
+#include "util/strtrim.h"
 
 char *strtrim(const char *str)
 {

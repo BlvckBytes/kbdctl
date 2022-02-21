@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#include "mman.h"
+#include "util/mman.h"
 
 /**
  * @brief Partially duplicate a string by specifying an offset and

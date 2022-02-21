@@ -9,11 +9,11 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include "mman.h"
-#include "atomanip.h"
-#include "strclone.h"
-#include "strfmt.h"
-#include "common_types.h"
+#include "util/mman.h"
+#include "util/atomanip.h"
+#include "util/strclone.h"
+#include "util/strfmt.h"
+#include "util/common_types.h"
 
 #define HTABLE_FNV_OFFSET 14695981039346656037UL
 #define HTABLE_FNV_PRIME 1099511628211UL

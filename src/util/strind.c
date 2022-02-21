@@ -1,4 +1,4 @@
-#include "strind.h"
+#include "util/strind.h"
 
 long strind(const char *str, const char *search, size_t offs)
 {

@@ -3,11 +3,11 @@
 
 #include <stdlib.h>
 
-#include "htable.h"
+#include "util/htable.h"
 #include "keyboard_key.h"
-#include "strtrim.h"
-#include "strind.h"
-#include "partial_strdup.h"
+#include "util/strtrim.h"
+#include "util/strind.h"
+#include "util/partial_strdup.h"
 
 #define KEYMAP_PARSER_MAX_LANGS 32
 #define KEYMAP_PARSER_MAX_KEYS 256

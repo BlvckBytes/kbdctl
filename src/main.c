@@ -2,12 +2,12 @@
 #include <hidapi/hidapi.h>
 #include <unistd.h>
 
-#include "mman.h"
+#include "util/mman.h"
 #include "keyboard.h"
-#include "strconv.h"
+#include "util/strconv.h"
 #include "ctl_frame.h"
-#include "dynarr.h"
-#include "htable.h"
+#include "util/dynarr.h"
+#include "util/htable.h"
 #include "keymap_parser.h"
 
 // Vendor- and product-id of the target device

@@ -4,7 +4,7 @@
 #include <inttypes.h>
 #include <stddef.h>
 
-#include "mman.h"
+#include "util/mman.h"
 #include "keyboard_color.h"
 #include "keyboard_key_color.h"
 #include "keyboard_effect.h"

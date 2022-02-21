@@ -1,6 +1,6 @@
 CC        := gcc
 CFLAGS    := -Wall
-SRC_FILES := $(wildcard *.c) $(wildcard */*.c)
+SRC_FILES := $(wildcard src/*.c) $(wildcard src/util/*.c)
 
 CPPFLAGS  := -I./include			# Local header files
 CPPFLAGS  += -I/opt/homebrew/include		# Homebrew header files

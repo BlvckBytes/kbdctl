@@ -1,4 +1,4 @@
-#include "partial_strdup.h"
+#include "util/partial_strdup.h"
 
 bool is_substr_loc(char *str, const char *search, size_t offs)
 {

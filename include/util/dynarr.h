@@ -4,9 +4,9 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#include "mman.h"
-#include "strfmt.h"
-#include "common_types.h"
+#include "util/mman.h"
+#include "util/strfmt.h"
+#include "util/common_types.h"
 
 /**
  * @brief Represents the dynamic array, keeping track of it's

@@ -3,7 +3,7 @@
 
 #include "keyboard_key.h"
 #include "keyboard_color.h"
-#include "mman.h"
+#include "util/mman.h"
 
 /**
  * @brief Groups a key to it's requested color

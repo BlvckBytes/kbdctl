@@ -7,8 +7,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include "common_macros.h"
-#include "atomanip.h"
+#include "util/common_macros.h"
+#include "util/atomanip.h"
 
 /*
 ============================================================================

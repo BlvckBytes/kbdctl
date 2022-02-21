@@ -5,8 +5,8 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "mman.h"
-#include "substr.h"
+#include "util/mman.h"
+#include "util/substr.h"
 
 /**
  * @brief Get a trimmed copy of a string

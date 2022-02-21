@@ -1,4 +1,4 @@
-#include "htable.h"
+#include "util/htable.h"
 
 /**
  * @brief Clean up an individual slot

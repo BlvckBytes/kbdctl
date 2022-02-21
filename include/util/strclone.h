@@ -4,8 +4,8 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "quickmaths.h"
-#include "mman.h"
+#include "util/quickmaths.h"
+#include "util/mman.h"
 
 /**
  * @brief Clone a string and limit it's length, returns NULL if the string was too large
