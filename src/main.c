@@ -7,9 +7,15 @@
 #include "strconv.h"
 #include "ctl_frame.h"
 #include "dynarr.h"
+#include "htable.h"
+#include "keymap_parser.h"
 
+// Vendor- and product-id of the target device
 #define TKB_VID 0x046D
 #define TKB_PID 0xC339
+
+// Location of the keymap config file (invalid paths are ignored)
+#define KEYMAP_FLOC "/Users/blvckbytes/.config/kbdctl/keymap.ini"
 
 // TEST: Color in all known keys, one after the other
 INLINED static void test_loop_keys(keyboard_t *kb, keyboard_color_t color)
@@ -50,6 +56,9 @@ INLINED static void test_loop_keys(keyboard_t *kb, keyboard_color_t color)
 
     // Skip gap
     if (i == KEY_MENU) i = KEY_CTRL_LEFT - 1;
+
+    // Skip unsupported keys
+    else if (i == KEY_Z) i = KEY_N0;
   }
 }
 
@@ -111,8 +120,16 @@ INLINED static void test_deactivate(keyboard_t *kb, ctl_frame_target_t target)
     fprintf(stderr, "Could not transmit data!\n");
 }
 
-int main(void)
+int process(void)
 {
+  // Parse and print the keymap
+  scptr char *err = NULL;
+  scptr htable_t *keymap = keymap_parser_parse(KEYMAP_FLOC, &err);
+  if (!keymap)
+    fprintf(stderr, "ERROR: Could not parse the keymap at " QUOTSTR ": %s\n", KEYMAP_FLOC, err);
+  else
+    keymap_parser_print(keymap);
+
   struct hid_device_info *henum, *dev;
   hid_init();
   henum = hid_enumerate(0x0, 0x0);
@@ -137,7 +154,7 @@ int main(void)
   // No keyboard found
   if (!kb)
   {
-    fprintf(stderr, "Could not find the keyboard matching vid=%d and pid=%d!\n", TKB_VID, TKB_PID);
+    fprintf(stderr, "ERROR: Could not find the keyboard matching vid=%d and pid=%d!\n", TKB_VID, TKB_PID);
     hid_exit();
     return 1;
   }
@@ -172,5 +189,14 @@ int main(void)
 
   keyboard_close(kb);
   hid_exit();
+
   return 0;
+}
+
+
+int main(void)
+{
+  int ret = process();
+  mman_print_info();
+  return ret;
 }

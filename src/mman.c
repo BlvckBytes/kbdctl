@@ -114,10 +114,10 @@ mman_meta_t *mman_realloc(void **ptr_ptr, size_t block_size, size_t num_blocks)
 ============================================================================
 */
 
-INLINED static bool mman_dealloc_direct(mman_meta_t *meta)
+void mman_dealloc_force(void *ptr)
 {
-  // Do nothing for nullptrs
-  if (!meta) return false;
+  mman_meta_t *meta = mman_fetch_meta(ptr);
+  if (!meta) return;
 
   // Call additional cleanup function, if applicable
   if (meta->cf) meta->cf(meta);
@@ -126,30 +126,25 @@ INLINED static bool mman_dealloc_direct(mman_meta_t *meta)
   free(meta);
   meta = NULL;
 
-  // Successful deallocation
-  return true;
+  // INFO: Increment the deallocation count for debugging purposes
+  atomic_increment(&mman_dealloc_count);
 }
 
 void mman_dealloc(void *ptr)
 {
+  if (!ptr) return;
   mman_meta_t *meta = mman_fetch_meta(ptr);
-  if (!meta) return;
-
-  if (mman_dealloc_direct(meta))
-    // INFO: Increment the deallocation count for debugging purposes
-    atomic_increment(&mman_dealloc_count);
-}
-
-void mman_attr_dealloc(void *ptr_ptr)
-{
-  mman_meta_t *meta = mman_fetch_meta(*((void **) ptr_ptr));
   if (!meta) return;
 
   // Decrease number of active references
   // Do nothing as long as active references remain
   if (atomic_decrement(&meta->refs) > 0) return;
+  mman_dealloc_force(meta->ptr);
+}
 
-  mman_dealloc_direct(meta);
+void mman_dealloc_attr(void *ptr_ptr)
+{
+  mman_dealloc(*((void **) ptr_ptr));
 }
 
 /*
@@ -174,10 +169,11 @@ void *mman_ref(void *ptr)
 ============================================================================
 */
 
-void mman_print_info()
+void mman_print_info(size_t us_del)
 {
+
   printf("----------< MMAN Statistics >----------\n");
   printf("> Allocated: %lu\n", mman_alloc_count);
-  printf("> Deallocated: %lu\n", mman_alloc_count);
+  printf("> Deallocated: %lu\n", mman_dealloc_count);
   printf("----------< MMAN Statistics >----------\n");
 }

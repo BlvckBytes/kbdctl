@@ -1,6 +1,9 @@
 #ifndef keyboard_key_h
 #define keyboard_key_h
 
+#include <stddef.h>
+#include <string.h>
+
 /**
  * @brief Keyboard keys and their corresponding address
  */
@@ -114,5 +117,21 @@ typedef enum keyboard_key
   KEY_ALT_RIGHT,
   KEY_WIN_RIGHT
 } keyboard_key_t;
+
+/**
+ * @brief Get the name of a key as a string
+ * 
+ * @param key Target key
+ * @return const char* Key name string, NULL if key is invalid
+ */
+const char *keyboard_key_get_name(keyboard_key_t key);
+
+/**
+ * @brief Get the key which corresponds to a string name
+ * 
+ * @param name Target key's string name
+ * @return keyboard_key_t Key, zero if name is invalid
+ */
+keyboard_key_t keyboard_key_get_key(const char *name);
 
 #endif

@@ -17,7 +17,7 @@
 */
 
 // Marks a memory managed variable
-#define scptr __attribute__((cleanup(mman_attr_dealloc)))
+#define scptr __attribute__((cleanup(mman_dealloc_attr)))
 
 /*
 ============================================================================
@@ -119,17 +119,26 @@ mman_meta_t *mman_realloc(void **ptr_ptr, size_t block_size, size_t num_blocks);
  * 
  * @param ptr Pointer to the resource
  */
+void mman_dealloc_force(void *ptr);
+
+/**
+ * @brief Deallocate a managed resource when it goes out of scope and
+ * has no references left pointing at it.
+ * 
+ * 
+ * @param ptr Pointer to the resource
+ */
 void mman_dealloc(void *ptr);
 
 /**
  * @brief Deallocate a managed resource when it goes out of scope and
  * has no references left pointing at it.
  * 
- * WARNING: Only to be called by GCC attributes, not manually!
+ * WARNING: Only to be used by compiler attributes!
  * 
  * @param ptr_ptr Pointer to the pointer to the resource
  */
-void mman_attr_dealloc(void *ptr_ptr);
+void mman_dealloc_attr(void *ptr_ptr);
 
 /*
 ============================================================================
