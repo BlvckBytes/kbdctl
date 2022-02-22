@@ -3,6 +3,7 @@
 
 #include <hidapi/hidapi.h>
 
+#include "util/strfmt.h"
 #include "util/strconv.h"
 #include "util/common_macros.h"
 #include "util/mman.h"
@@ -32,19 +33,20 @@ typedef struct keyboard
 keyboard_t *keyboard_from_hdi(struct hid_device_info *hdi);
 
 /**
- * @brief Print a keyboard's important fields to stdout
+ * @brief Dump a keyboard's important fields as string
  */
-void keyboard_print(keyboard_t *kb);
+char *keyboard_dump(keyboard_t *kb);
 
 /**
  * @brief Open a connection to the keyboard
  * 
  * @param kb Keyboard to connect
+ * @param err Error, leave NULL if not interested
  * 
  * @return true Successfully connected
  * @return false Error during connection trial, maybe forgot sudo?
  */
-bool keyboard_open(keyboard_t *kb);
+bool keyboard_open(keyboard_t *kb, char **err);
 
 /**
  * @brief Close an existing keyboard connection, do nothing otherwise

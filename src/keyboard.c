@@ -1,8 +1,11 @@
-#include <keyboard.h>
+#include "keyboard.h"
 
 static void keyboard_cleanup(mman_meta_t *meta)
 {
   keyboard_t *kb = (keyboard_t *) meta->ptr;
+
+  // Close USB resource if still open
+  keyboard_close(kb);
 
   // Dealloc string dupes
   mman_dealloc(kb->manufacturer);
@@ -11,12 +14,18 @@ static void keyboard_cleanup(mman_meta_t *meta)
   mman_dealloc(kb->serial);
 }
 
-void keyboard_print(keyboard_t *kb)
+char *keyboard_dump(keyboard_t *kb)
 {
-  printf(
+  scptr char *res = mman_alloc(sizeof(char), 128, NULL);
+  size_t res_offs = 0;
+
+  strfmt(
+    &res, &res_offs,
     "Keyboard {man=" QUOTSTR ", ser=" QUOTSTR ", prod=" QUOTSTR "}\n",
     kb->manufacturer, kb->serial_str, kb->product
   );
+
+  return mman_ref(res);
 }
 
 keyboard_t *keyboard_from_hdi(struct hid_device_info *hdi)
@@ -45,12 +54,12 @@ keyboard_t *keyboard_from_hdi(struct hid_device_info *hdi)
   return mman_ref(kb);
 }
 
-bool keyboard_open(keyboard_t *kb)
+bool keyboard_open(keyboard_t *kb, char **err)
 {
   // A non-null handle already exists
   if (kb->handle)
   {
-    fprintf(stderr, "This keyboard is already connected!\n");
+    if (err) *err = strfmt_direct("This keyboard is already connected!");
     return false;
   }
 
@@ -64,8 +73,11 @@ bool keyboard_open(keyboard_t *kb)
   // Could not open a connection
   if (!kb->handle)
   {
-    scptr char *err = strconv(hid_error(NULL), 1024);
-    fprintf(stderr, "Could not open device connection! (%s)\n", err);
+    if (err)
+    {
+      scptr char *hiderr = strconv(hid_error(NULL), 1024);
+      *err = strfmt_direct("Could not open device connection (%s)!", hiderr);
+    }
     return false;
   }
 

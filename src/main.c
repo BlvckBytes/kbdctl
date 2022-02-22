@@ -138,6 +138,7 @@ INLINED static void test_deactivate(keyboard_t *kb, keyboard_ctl_frame_target_t 
 
 int process(void)
 {
+  // List available devices
   scptr char *list = keyboard_devman_list();
   printf("Available devices:\n%s\n", list);
 
@@ -152,28 +153,8 @@ int process(void)
     printf("Parsed keymap:\n%s\n", parsed);
   }
 
-  struct hid_device_info *henum, *dev;
-  hid_init();
-  henum = hid_enumerate(0x0, 0x0);
-
-  // Loop all known local devices
-  scptr keyboard_t *kb = NULL;
-  for (dev = henum; dev; dev = dev->next)
-  {
-    // Skip devices that are not of interest
-    if (dev->vendor_id != TKB_VID || dev->product_id != TKB_PID)
-      continue;
-
-    // Convert and store
-    kb = keyboard_from_hdi(dev);
-
-    // Take the first device for now
-    break;
-  }
-
-  hid_free_enumeration(henum);
-
   // No keyboard found
+  scptr keyboard_t *kb = keyboard_devman_find(TKB_VID, TKB_PID, NULL);
   if (!kb)
   {
     fprintf(stderr, "ERROR: Could not find the keyboard matching vid=%d and pid=%d!\n", TKB_VID, TKB_PID);
@@ -182,11 +163,14 @@ int process(void)
   }
 
   // Print keyboard
-  printf("Using the following keyboard:\n");
-  keyboard_print(kb);
+  scptr char *kb_dump = keyboard_dump(kb);
+  printf("Using the following keyboard:\n%s\n", kb_dump);
 
-  if (!keyboard_open(kb))
+  // Open keyboard connection
+  scptr char *kbop_err = NULL;
+  if (!keyboard_open(kb, &kbop_err))
   {
+    fprintf(stderr, "ERROR: %s\n", kbop_err);
     hid_exit();
     return 1;
   }
@@ -209,7 +193,6 @@ int process(void)
   // test_deactivate(kb, TARG_LOGO);
   // test_deactivate(kb, TARG_KEYS);
 
-  keyboard_close(kb);
   hid_exit();
   return 0;
 }

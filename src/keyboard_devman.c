@@ -32,3 +32,36 @@ char *keyboard_devman_list()
   hid_free_enumeration(henum);
   return mman_ref(res);
 }
+
+keyboard_t *keyboard_devman_find(uint16_t vid, uint16_t pid, char *ser)
+{
+  struct hid_device_info *henum = NULL, *dev = NULL;
+  henum = hid_enumerate(0x0, 0x0);
+
+  // Loop all known local devices
+  scptr keyboard_t *kb = NULL;
+  for (dev = henum; dev; dev = dev->next)
+  {
+    scptr char *ser_str = strconv(dev->serial_number, 128);
+
+    // Skip devices that are not of interest
+    if (
+      dev->vendor_id == vid
+      && dev->product_id == pid
+      && (!ser || strncmp(ser, ser_str, strlen(ser) == 0))
+    )
+    {
+      // Convert and store
+      kb = keyboard_from_hdi(dev);
+
+      // Take the first device for now
+      break;
+    }
+  }
+
+  hid_free_enumeration(henum);
+
+  // Return NULL if not found or the created kb
+  if (!kb) return NULL;
+  return mman_ref(kb);
+}
