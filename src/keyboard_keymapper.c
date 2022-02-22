@@ -2,7 +2,7 @@
 
 htable_t *keyboard_keymapper_load(const char *floc, char **err)
 {
-  scptr htable_t *res = iniparse(floc, err);
+  scptr htable_t *res = iniparse(floc, err, 32, 256);
 
   if (!res) return NULL;
   return mman_ref(res);
@@ -24,6 +24,11 @@ keyboard_key_t keyboard_keymapper_lookup(htable_t *keymap, const char *lang, key
   if(htable_fetch(lang_sec, keyboard_key_name(key), (void **) &tar_key) != HTABLE_SUCCESS)
     return key;
 
+  // Get the numeric enum value
+  keyboard_key_t res_key;
+  if (keyboard_key_value(tar_key, &res_key) != ENUMLUT_SUCCESS)
+    return key;
+
   // Return the mapping result
-  return keyboard_key_value(tar_key);
+  return res_key;
 }

@@ -12,6 +12,7 @@
 #include "keyboard_ctl_frame.h"
 #include "keyboard_devman.h"
 #include "keyboard_keymapper.h"
+#include "keyboard_animation.h"
 
 // Vendor- and product-id of the target device
 #define TKB_VID 0x046D
@@ -19,6 +20,7 @@
 
 // Location of the keymap config file (invalid paths are ignored)
 #define KEYMAP_FLOC "/Users/blvckbytes/.config/kbdctl/keymap.ini"
+#define ANIM_FLOC "/Users/blvckbytes/.config/kbdctl/animation.ini"
 
 /*
 ============================================================================
@@ -163,7 +165,22 @@ int process(void)
   else
   {
     scptr char *parsed = iniparse_dump(keymap);
-    printf("Parsed keymap:\n%s\n", parsed);
+    printf("Parsed keymap table:\n%s\n", parsed);
+  }
+
+  // Parse and print the animation
+  scptr char *anim_err = NULL;
+  scptr keyboard_animation_t *anim = keyboard_animaton_load(ANIM_FLOC, &anim_err);
+  if (!anim)
+    fprintf(stderr, "ERROR: Could not parse the animation at " QUOTSTR ": %s\n", ANIM_FLOC, anim_err);
+  else
+  {
+    scptr char *parsed = iniparse_dump(anim->animation);
+    printf("Parsed animation table:\n%s\n", parsed);
+    printf(
+      "Parsed animation frame_delay=%ld, draw_mode=%s\n",
+      anim->frame_del, keyboard_draw_mode_name(anim->draw_mode)
+    );
   }
 
   // keyboard_key_t k_from = KEY_Z;

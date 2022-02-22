@@ -6,10 +6,10 @@
     return NULL;                               \
   }
 
-htable_t *iniparse(const char *floc, char **err)
+htable_t *iniparse(const char *floc, char **err, size_t max_secs, size_t max_keys_per_sec)
 {
   // Allocate outer section table
-  scptr htable_t *secs = htable_make(INIPARSE_MAX_SECS, mman_dealloc_nr);
+  scptr htable_t *secs = htable_make(max_secs, mman_dealloc_nr);
 
   // Open keymap file
   FILE *f = fopen(floc, "r");
@@ -60,7 +60,7 @@ htable_t *iniparse(const char *floc, char **err)
       // Create new section
       else
       {
-        scptr htable_t *mappings = htable_make(INIPARSE_MAX_KEYS, mman_dealloc_nr);
+        scptr htable_t *mappings = htable_make(max_keys_per_sec, mman_dealloc_nr);
         htable_insert(secs, sec, mman_ref(mappings));
         curr_sec = mappings;
       }

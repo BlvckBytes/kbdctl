@@ -11,9 +11,6 @@
 #include "util/strind.h"
 #include "util/partial_strdup.h"
 
-#define INIPARSE_MAX_SECS 32
-#define INIPARSE_MAX_KEYS 256
-
 // Initial length of the string buffer used when printing key mappings
 #define INIPARSE_MAPPINGS_PRINT_INIT_LEN 512
 
@@ -27,9 +24,11 @@
  * 
  * @param floc File location, full absolute path, ending in .ini
  * @param err Error string output buffer, NULL if not needed
+ * @param max_secs Maximum number of sections
+ * @param max_keys_per_sec Maximum number of keys per section
  * @return htable_t* Parsed table, NULL on errors, errno will be set
  */
-htable_t *iniparse(const char *floc, char **err);
+htable_t *iniparse(const char *floc, char **err, size_t max_secs, size_t max_keys_per_sec);
 
 /**
  * @brief Dump a parsed keymap

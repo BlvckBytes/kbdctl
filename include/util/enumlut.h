@@ -9,6 +9,12 @@
 #define GENERATE_ENUM(ENUM, OFFS) ENUM = OFFS,
 #define GENERATE_STRING(ENUM, OFFS) [OFFS] = #ENUM,
 
+typedef enum enumlut_result
+{
+  ENUMLUT_SUCCESS,
+  ENUMLUT_NOT_FOUND
+} enumlut_result_t;
+
 /**
  * @brief Enum name getter function declaration
  * 
@@ -43,7 +49,7 @@
  * @param enum_name Name of the enum
  */
 #define ENUM_GET_VALUE_DECL(namearr, enum_name)                   \
-  enum_name##_t namearr##_value(const char *name)
+  enumlut_result_t namearr##_value(const char *name, enum_name##_t *out)
 
 /**
  * @brief Enum value getter function implementation
@@ -55,7 +61,7 @@
 #define ENUM_GET_VALUE_IMPL(namearr, enum_name)                   \
   ENUM_GET_VALUE_DECL(namearr, enum_name) {                       \
     /* No name provided */                                        \
-    if (!name) return 0;                                          \
+    if (!name) return ENUMLUT_NOT_FOUND;                          \
     /* Calculate the length of the array */                       \
     size_t length = sizeof(namearr) / sizeof(const char *);       \
     /* Search through all keys */                                 \
@@ -64,10 +70,13 @@
       /* Compare and return if the name matched */                \
       const char *curr = namearr[i];                              \
       if (curr && strncasecmp(name, curr, strlen(curr)) == 0)     \
-        return i;                                                 \
+      {                                                           \
+        *out = i;                                                 \
+        return ENUMLUT_SUCCESS;                                   \
+      }                                                           \
     }                                                             \
     /* Key not found */                                           \
-    return 0;                                                     \
+    return ENUMLUT_NOT_FOUND;                                     \
   }
 
 /**
