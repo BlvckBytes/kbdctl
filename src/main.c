@@ -5,7 +5,7 @@
 #include "util/mman.h"
 #include "keyboard.h"
 #include "util/strconv.h"
-#include "ctl_frame.h"
+#include "keyboard_ctl_frame.h"
 #include "util/dynarr.h"
 #include "util/htable.h"
 #include "util/iniparse.h"
@@ -21,15 +21,15 @@ INLINED static void test_apply_effect
 (
   keyboard_t *kb,
   keyboard_effect_t effect,
-  ctl_frame_target_t target,
+  keyboard_ctl_frame_target_t target,
   uint16_t time,
   keyboard_color_t color
 )
 {
   // Create parameterized effect frame and send
-  scptr uint8_t *data = ctl_frame_make(TYPE_EFFECT);
-  ctl_frame_effect_apply(data, effect, time, color, true);
-  ctl_frame_target_apply(data, target);
+  scptr uint8_t *data = keyboard_ctl_frame_make(TYPE_EFFECT);
+  keyboard_ctl_frame_effect_apply(data, effect, time, color, true);
+  keyboard_ctl_frame_target_apply(data, target);
   if (!keyboard_transmit(kb, data, mman_fetch_meta(data)->num_blocks))
     fprintf(stderr, "Could not transmit data!\n");
 }
@@ -41,18 +41,18 @@ INLINED static void test_apply_status_color
 )
 {
   // Create items frame and both available status colors
-  scptr uint8_t *data = ctl_frame_make(TYPE_KEYS);
+  scptr uint8_t *data = keyboard_ctl_frame_make(TYPE_KEYS);
   scptr keyboard_key_color_t *stat_backl = keyboard_key_color_make(KEY_STATUS_BACKLIGHT, color);
   scptr keyboard_key_color_t *stat_game = keyboard_key_color_make(KEY_STATUS_GAME, color);
   keyboard_key_color_t *keys_arr[] = {stat_backl, stat_game};
 
   size_t num_keys = sizeof(keys_arr) / sizeof(keyboard_key_color_t *), statuses_offs = 0;
-  ctl_frame_key_list_apply(data, keys_arr, num_keys, KGA_STATUS, &statuses_offs);
+  keyboard_ctl_frame_key_list_apply(data, keys_arr, num_keys, KGA_STATUS, &statuses_offs);
   if (!keyboard_transmit(kb, data, mman_fetch_meta(data)->num_blocks))
     fprintf(stderr, "Could not transmit data!\n");
 
   // Commit changes and thus make them visible
-  scptr uint8_t *data_comm = ctl_frame_make(TYPE_COMMIT);
+  scptr uint8_t *data_comm = keyboard_ctl_frame_make(TYPE_COMMIT);
   if (!keyboard_transmit(kb, data_comm, mman_fetch_meta(data_comm)->num_blocks))
     fprintf(stderr, "Could not transmit data!\n");
 }
@@ -82,7 +82,7 @@ INLINED static void test_loop_keys(
     size_t num_keys = dynarr_as_array(keys, (void ***) &key_arr);
 
     // Make items frame
-    scptr uint8_t *data_keys = ctl_frame_make(TYPE_KEYS);
+    scptr uint8_t *data_keys = keyboard_ctl_frame_make(TYPE_KEYS);
 
     // Make the logo flash up red before setting the key (to find non-available keys)
     if (red_logo_before_setting)
@@ -97,14 +97,14 @@ INLINED static void test_loop_keys(
     size_t keys_offs = 0;
     while (num_keys != keys_offs)
     {
-      ctl_frame_key_list_apply(data_keys, key_arr, num_keys, KGA_KEY, &keys_offs);
+      keyboard_ctl_frame_key_list_apply(data_keys, key_arr, num_keys, KGA_KEY, &keys_offs);
       if (!keyboard_transmit(kb, data_keys, mman_fetch_meta(data_keys)->num_blocks))
         fprintf(stderr, "Could not transmit data!\n");
       usleep(1000 * 10);
     }
 
     // Commit changes and thus make them visible
-    scptr uint8_t *data_comm = ctl_frame_make(TYPE_COMMIT);
+    scptr uint8_t *data_comm = keyboard_ctl_frame_make(TYPE_COMMIT);
     if (!keyboard_transmit(kb, data_comm, mman_fetch_meta(data_comm)->num_blocks))
       fprintf(stderr, "Could not transmit data!\n");
 
@@ -119,17 +119,17 @@ INLINED static void test_loop_keys(
 INLINED static void test_boot_mode(keyboard_t *kb, keyboard_boot_mode_t mode)
 {
   // Create parameterized boot mode frame and send
-  scptr uint8_t *data = ctl_frame_make(TYPE_BOOT_MODE);
-  ctl_frame_boot_mode_apply(data, mode);
+  scptr uint8_t *data = keyboard_ctl_frame_make(TYPE_BOOT_MODE);
+  keyboard_ctl_frame_boot_mode_apply(data, mode);
   if (!keyboard_transmit(kb, data, mman_fetch_meta(data)->num_blocks))
     fprintf(stderr, "Could not transmit data!\n");
 }
 
-INLINED static void test_deactivate(keyboard_t *kb, ctl_frame_target_t target)
+INLINED static void test_deactivate(keyboard_t *kb, keyboard_ctl_frame_target_t target)
 {
   // Create parameterized boot mode frame and send
-  scptr uint8_t *data = ctl_frame_make(TYPE_DEACTIVATE);
-  ctl_frame_target_apply(data, target);
+  scptr uint8_t *data = keyboard_ctl_frame_make(TYPE_DEACTIVATE);
+  keyboard_ctl_frame_target_apply(data, target);
   if (!keyboard_transmit(kb, data, mman_fetch_meta(data)->num_blocks))
     fprintf(stderr, "Could not transmit data!\n");
 }

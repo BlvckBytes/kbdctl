@@ -1,6 +1,6 @@
-#include "ctl_frame.h"
+#include "keyboard_ctl_frame.h"
 
-uint8_t *ctl_frame_make(ctl_frame_type_t type)
+uint8_t *keyboard_ctl_frame_make(keyboard_ctl_frame_type_t type)
 {
   scptr uint8_t *res;
   size_t frame_size;
@@ -40,18 +40,18 @@ uint8_t *ctl_frame_make(ctl_frame_type_t type)
   return mman_ref(res);
 }
 
-void ctl_frame_target_apply(uint8_t *frame, ctl_frame_target_t target)
+void keyboard_ctl_frame_target_apply(uint8_t *frame, keyboard_ctl_frame_target_t target)
 {
   frame[4] = target;
 }
 
-void ctl_frame_boot_mode_apply(uint8_t *frame, keyboard_boot_mode_t boot_mode)
+void keyboard_ctl_frame_boot_mode_apply(uint8_t *frame, keyboard_boot_mode_t boot_mode)
 {
   frame[5] = 0x01;
   frame[6] = boot_mode;
 }
 
-void ctl_frame_effect_apply(
+void keyboard_ctl_frame_effect_apply(
   uint8_t *frame,
   keyboard_effect_t effect,
   uint16_t time,
@@ -97,7 +97,7 @@ void ctl_frame_effect_apply(
     frame[13] = (effect >> 8) & 0xFF;
 }
 
-void ctl_frame_key_list_apply(
+void keyboard_ctl_frame_key_list_apply(
   uint8_t *frame,
   keyboard_key_color_t **keys,
   size_t num_keys,

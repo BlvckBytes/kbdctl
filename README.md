@@ -58,4 +58,4 @@ After observing for a while, I came up with this filter in order to only end up 
 
 ![capture.jpg](readme_img/capture.jpg)
 
-So... all that's left to do now is to play around with the settings in logitech's software and find byte-patterns. All documentation of the protocol will be located at `include/ctl_frame.h`.
+So... all that's left to do now is to play around with the settings in logitech's software and find byte-patterns. All documentation of the protocol will be located at `include/keyboard_ctl_frame.h`.
