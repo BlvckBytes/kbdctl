@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "util/quickmaths.h"
+#include "util/uminmax.h"
 #include "util/mman.h"
 
 /**

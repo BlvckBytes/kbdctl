@@ -1,4 +1,4 @@
-#include "util/quickmaths.h"
+#include "util/uminmax.h"
 
 uint64_t u64_min(uint64_t a, uint64_t b)
 {

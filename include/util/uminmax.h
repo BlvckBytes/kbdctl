@@ -1,5 +1,5 @@
-#ifndef quickmaths_h
-#define quickmaths_h
+#ifndef uminmax_h
+#define uminmax_h
 
 #include <inttypes.h>
 
