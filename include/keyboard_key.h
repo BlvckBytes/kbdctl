@@ -1,143 +1,119 @@
 #ifndef keyboard_key_h
 #define keyboard_key_h
 
-#include <stddef.h>
-#include <string.h>
+#include "util/enumlut.h"
 
-#include "keyboard_group_addr.h"
+// Keyboard keys and their corresponding address
+#define _EVALS_KEYBOARD_KEY(FUN) \
+        FUN(KEY_STATUS_BACKLIGHT, 0x01) \
+        FUN(KEY_STATUS_GAME,      0x02) \
+        FUN(KEY_A,                0x04) \
+        FUN(KEY_B,                0x05) \
+        FUN(KEY_C,                0x06) \
+        FUN(KEY_D,                0x07) \
+        FUN(KEY_E,                0x08) \
+        FUN(KEY_F,                0x09) \
+        FUN(KEY_G,                0x0A) \
+        FUN(KEY_H,                0x0B) \
+        FUN(KEY_I,                0x0C) \
+        FUN(KEY_J,                0x0D) \
+        FUN(KEY_K,                0x0E) \
+        FUN(KEY_L,                0x0F) \
+        FUN(KEY_M,                0x10) \
+        FUN(KEY_N,                0x11) \
+        FUN(KEY_O,                0x12) \
+        FUN(KEY_P,                0x13) \
+        FUN(KEY_Q,                0x14) \
+        FUN(KEY_R,                0x15) \
+        FUN(KEY_S,                0x16) \
+        FUN(KEY_T,                0x17) \
+        FUN(KEY_U,                0x18) \
+        FUN(KEY_V,                0x19) \
+        FUN(KEY_W,                0x1A) \
+        FUN(KEY_X,                0x1B) \
+        FUN(KEY_Y,                0x1C) \
+        FUN(KEY_Z,                0x1D) \
+        FUN(KEY_N1,               0x1E) \
+        FUN(KEY_N2,               0x1F) \
+        FUN(KEY_N3,               0x20) \
+        FUN(KEY_N4,               0x21) \
+        FUN(KEY_N5,               0x22) \
+        FUN(KEY_N6,               0x23) \
+        FUN(KEY_N7,               0x24) \
+        FUN(KEY_N8,               0x25) \
+        FUN(KEY_N9,               0x26) \
+        FUN(KEY_N0,               0x27) \
+        FUN(KEY_ENTER,            0x28) \
+        FUN(KEY_ESC,              0x29) \
+        FUN(KEY_BACKSPACE,        0x2A) \
+        FUN(KEY_TAB,              0x2B) \
+        FUN(KEY_SPACE,            0x2C) \
+        FUN(KEY_MINUS,            0x2D) \
+        FUN(KEY_EQUAL,            0x2E) \
+        FUN(KEY_OPEN_BRACKET,     0x2F) \
+        FUN(KEY_CLOSE_BRACKET,    0x30) \
+        FUN(KEY_BACKSLASH,        0x31) \
+        FUN(KEY_DOLLAR,           0x32) \
+        FUN(KEY_SEMICOLON,        0x33) \
+        FUN(KEY_QUOTE,            0x34) \
+        FUN(KEY_TILDE,            0x35) \
+        FUN(KEY_COMMA,            0x36) \
+        FUN(KEY_PERIOD,           0x37) \
+        FUN(KEY_SLASH,            0x38) \
+        FUN(KEY_CAPS_LOCK,        0x39) \
+        FUN(KEY_F1,               0x3A) \
+        FUN(KEY_F2,               0x3B) \
+        FUN(KEY_F3,               0x3C) \
+        FUN(KEY_F4,               0x3D) \
+        FUN(KEY_F5,               0x3E) \
+        FUN(KEY_F6,               0x3F) \
+        FUN(KEY_F7,               0x40) \
+        FUN(KEY_F8,               0x41) \
+        FUN(KEY_F9,               0x42) \
+        FUN(KEY_F10,              0x43) \
+        FUN(KEY_F11,              0x44) \
+        FUN(KEY_F12,              0x45) \
+        FUN(KEY_PRINT_SCREEN,     0x46) \
+        FUN(KEY_SCROLL_LOCK,      0x47) \
+        FUN(KEY_PAUSE_BREAK,      0x48) \
+        FUN(KEY_INSERT,           0x49) \
+        FUN(KEY_HOME,             0x4A) \
+        FUN(KEY_PAGE_UP,          0x4B) \
+        FUN(KEY_DEL,              0x4C) \
+        FUN(KEY_END,              0x4D) \
+        FUN(KEY_PAGE_DOWN,        0x4E) \
+        FUN(KEY_ARROW_RIGHT,      0x4F) \
+        FUN(KEY_ARROW_LEFT,       0x50) \
+        FUN(KEY_ARROW_BOTTOM,     0x51) \
+        FUN(KEY_ARROW_TOP,        0x52) \
+        FUN(KEY_NUM_LOCK,         0x53) \
+        FUN(KEY_NUM_SLASH,        0x54) \
+        FUN(KEY_NUM_ASTERISK,     0x55) \
+        FUN(KEY_NUM_MINUS,        0x56) \
+        FUN(KEY_NUM_PLUS,         0x57) \
+        FUN(KEY_NUM_ENTER,        0x58) \
+        FUN(KEY_NUM_1,            0x59) \
+        FUN(KEY_NUM_2,            0x5A) \
+        FUN(KEY_NUM_3,            0x5B) \
+        FUN(KEY_NUM_4,            0x5C) \
+        FUN(KEY_NUM_5,            0x5D) \
+        FUN(KEY_NUM_6,            0x5E) \
+        FUN(KEY_NUM_7,            0x5F) \
+        FUN(KEY_NUM_8,            0x60) \
+        FUN(KEY_NUM_9,            0x61) \
+        FUN(KEY_NUM_0,            0x62) \
+        FUN(KEY_NUM_DOT,          0x63) \
+        FUN(KEY_INTL_BACKSLASH,   0x64) \
+        FUN(KEY_MENU,             0x65) \
+        FUN(KEY_CTRL_LEFT,        0xE0) \
+        FUN(KEY_SHIFT_LEFT,       0xE1) \
+        FUN(KEY_ALT_LEFT,         0xE2) \
+        FUN(KEY_WIN_LEFT,         0xE3) \
+        FUN(KEY_CTRL_RIGHT,       0xE4) \
+        FUN(KEY_SHIFT_RIGHT,      0xE5) \
+        FUN(KEY_ALT_RIGHT,        0xE6) \
+        FUN(KEY_WIN_RIGHT,        0xE7)
 
-/**
- * @brief Keyboard keys and their corresponding address
- */
-typedef enum keyboard_key
-{
-  KEY_STATUS_BACKLIGHT         = 0x01,
-  KEY_STATUS_GAME,
-
-  KEY_A                        = 0x04,
-  KEY_B,
-  KEY_C,
-  KEY_D,
-  KEY_E,
-  KEY_F,
-  KEY_G,
-  KEY_H,
-  KEY_I,
-  KEY_J,
-  KEY_K,
-  KEY_L,
-  KEY_M,
-  KEY_N,
-  KEY_O,
-  KEY_P,
-  KEY_Q,
-  KEY_R,
-  KEY_S,
-  KEY_T,
-  KEY_U,
-  KEY_V,
-  KEY_W,
-  KEY_X,
-  KEY_Y,
-  KEY_Z,
-  KEY_N1,
-  KEY_N2,
-  KEY_N3,
-  KEY_N4,
-  KEY_N5,
-  KEY_N6,
-  KEY_N7,
-  KEY_N8,
-  KEY_N9,
-  KEY_N0,
-  KEY_ENTER,
-  KEY_ESC,
-  KEY_BACKSPACE,
-  KEY_TAB,
-  KEY_SPACE,
-  KEY_MINUS,
-  KEY_EQUAL,
-  KEY_OPEN_BRACKET,
-  KEY_CLOSE_BRACKET,
-  KEY_BACKSLASH,
-  KEY_DOLLAR,
-  KEY_SEMICOLON,
-  KEY_QUOTE,
-  KEY_TILDE,
-  KEY_COMMA,
-  KEY_PERIOD,
-  KEY_SLASH,
-  KEY_CAPS_LOCK,
-  KEY_F1,
-  KEY_F2,
-  KEY_F3,
-  KEY_F4,
-  KEY_F5,
-  KEY_F6,
-  KEY_F7,
-  KEY_F8,
-  KEY_F9,
-  KEY_F10,
-  KEY_F11,
-  KEY_F12,
-  KEY_PRINT_SCREEN,
-  KEY_SCROLL_LOCK,
-  KEY_PAUSE_BREAK,
-  KEY_INSERT,
-  KEY_HOME,
-  KEY_PAGE_UP,
-  KEY_DEL,
-  KEY_END,
-  KEY_PAGE_DOWN,
-  KEY_ARROW_RIGHT,
-  KEY_ARROW_LEFT,
-  KEY_ARROW_BOTTOM,
-  KEY_ARROW_TOP,
-  KEY_NUM_LOCK,
-  KEY_NUM_SLASH,
-  KEY_NUM_ASTERISK,
-  KEY_NUM_MINUS,
-  KEY_NUM_PLUS,
-  KEY_NUM_ENTER,
-  KEY_NUM_1,
-  KEY_NUM_2,
-  KEY_NUM_3,
-  KEY_NUM_4,
-  KEY_NUM_5,
-  KEY_NUM_6,
-  KEY_NUM_7,
-  KEY_NUM_8,
-  KEY_NUM_9,
-  KEY_NUM_0,
-  KEY_NUM_DOT,
-  KEY_INTL_BACKSLASH,
-  KEY_MENU,
-
-  KEY_CTRL_LEFT                = 0xE0,
-  KEY_SHIFT_LEFT,
-  KEY_ALT_LEFT,
-  KEY_WIN_LEFT,
-  KEY_CTRL_RIGHT,
-  KEY_SHIFT_RIGHT,
-  KEY_ALT_RIGHT,
-  KEY_WIN_RIGHT,
-
-} keyboard_key_t;
-
-/**
- * @brief Get the name of a key as a string
- * 
- * @param key Target key
- * @return const char* Key name string, NULL if key is invalid
- */
-const char *keyboard_key_get_name(keyboard_key_t key);
-
-/**
- * @brief Get the key which corresponds to a string name
- * 
- * @param name Target key's string name
- * @return keyboard_key_t Key, zero if name is invalid
- */
-keyboard_key_t keyboard_key_get_key(const char *name);
+ENUM_TYPEDEF_FULL_IMPL(keyboard_key, _EVALS_KEYBOARD_KEY);
 
 #endif

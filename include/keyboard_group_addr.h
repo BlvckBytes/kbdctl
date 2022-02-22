@@ -1,13 +1,13 @@
 #ifndef keyboard_group_addr_h
 #define keyboard_group_addr_h
 
-/**
- * @brief The group's address a keyboard item is residing in
- */
-typedef enum keyboard_group_addr
-{
-  KGA_STATUS                    = 0x4005,       // Status LEDs (backlight, game-mode)
-  KGA_KEY                       = 0x010E        // Individual keys
-} keyboard_group_addr_t;
+#include "util/enumlut.h"
+
+// The group's address a keyboard item is residing in
+#define _EVALS_KEYBOARD_GROUP_ADDR(FUN) \
+        FUN(KGA_STATUS,     0x4005)     \
+        FUN(KGA_KEY,        0x010E)
+
+ENUM_TYPEDEF_FULL_IMPL(keyboard_group_addr, _EVALS_KEYBOARD_GROUP_ADDR);
 
 #endif
