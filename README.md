@@ -1,12 +1,13 @@
 # kbdctl
 
-![keyboard](readme_img/keyboard.jpg)
+![Keyboard Snake](readme_img/keyboard_snake.gif)
 
 I bought a Logitech G Pro TKL RGB keyboard a few weeks ago, and now I'm sick and tired of the `Logitech G HUB` bloatware I need to install just to alter the lightshow. This is why I'm writing this barebones cli controller, to finally take care of business.
 
 # Table of Contents
 
 * [ToDo](#todo)
+  * [Documentation](#documentation)
 * [Dependencies](#dependencies)
 * [Building](#building)
 * [Reversing The Protocol](#reversing-the-protocol)
@@ -18,11 +19,16 @@ I bought a Logitech G Pro TKL RGB keyboard a few weeks ago, and now I'm sick and
 - [X] Apply built in animation
 - [X] Apply custom key lighting
 - [X] Add custom keymap functionality using lookup table files
-- [ ] Write a small doc of C-API usage-examples
 - [X] Create custom animations using key-array frames
 - [ ] Turn this into a daemon using web-sockets
 - [ ] Add the ability to store settings on profiles
 - [ ] Just maybe... add a GUI?
+
+### Documentation
+
+- [ ] Write a small doc of C-API usage-examples
+- [ ] Write about keyboard mapping
+- [ ] Write about animations
 
 ## Dependencies
 
