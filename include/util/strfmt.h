@@ -7,6 +7,9 @@
 
 #include "util/mman.h"
 
+// String wrapped in quotes used in combination with printf / logging
+#define QUOTSTR "\"%s\""
+
 // Replace empty strings with a questionmark
 #define STRFMT_EMPTYMARK(str) strlen(str) == 0 ? "?" : str
 

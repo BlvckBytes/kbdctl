@@ -5,8 +5,9 @@
 
 #include "util/strfmt.h"
 #include "util/strconv.h"
-#include "util/common_macros.h"
+#include "util/compattrs.h"
 #include "util/mman.h"
+#include "util/dbglog.h"
 
 /**
  * @brief Represents the keyboard device and all it's necessary data

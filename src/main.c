@@ -7,7 +7,7 @@
 #include "util/dynarr.h"
 #include "util/htable.h"
 #include "util/iniparse.h"
-
+#include "util/dbglog.h"
 #include "keyboard.h"
 #include "keyboard_ctl_frame.h"
 #include "keyboard_devman.h"
@@ -42,7 +42,7 @@ INLINED static void test_apply_effect
   keyboard_ctl_frame_effect_apply(data, effect, time, color, true);
   keyboard_ctl_frame_target_apply(data, target);
   if (!keyboard_transmit(kb, data, mman_fetch_meta(data)->num_blocks))
-    fprintf(stderr, "Could not transmit data!\n");
+    dbgerr("Could not transmit data!\n");
 }
 
 INLINED static void test_apply_status_color
@@ -60,12 +60,12 @@ INLINED static void test_apply_status_color
   size_t num_keys = sizeof(keys_arr) / sizeof(keyboard_key_color_t *), statuses_offs = 0;
   keyboard_ctl_frame_key_list_apply(data, keys_arr, num_keys, KGA_STATUS, &statuses_offs);
   if (!keyboard_transmit(kb, data, mman_fetch_meta(data)->num_blocks))
-    fprintf(stderr, "Could not transmit data!\n");
+    dbgerr("Could not transmit data!\n");
 
   // Commit changes and thus make them visible
   scptr uint8_t *data_comm = keyboard_ctl_frame_make(TYPE_COMMIT);
   if (!keyboard_transmit(kb, data_comm, mman_fetch_meta(data_comm)->num_blocks))
-    fprintf(stderr, "Could not transmit data!\n");
+    dbgerr("Could not transmit data!\n");
 }
 
 INLINED static void test_loop_keys(
@@ -110,14 +110,14 @@ INLINED static void test_loop_keys(
     {
       keyboard_ctl_frame_key_list_apply(data_keys, key_arr, num_keys, KGA_KEY, &keys_offs);
       if (!keyboard_transmit(kb, data_keys, mman_fetch_meta(data_keys)->num_blocks))
-        fprintf(stderr, "Could not transmit data!\n");
+        dbgerr("Could not transmit data!\n");
       usleep(1000 * 10);
     }
 
     // Commit changes and thus make them visible
     scptr uint8_t *data_comm = keyboard_ctl_frame_make(TYPE_COMMIT);
     if (!keyboard_transmit(kb, data_comm, mman_fetch_meta(data_comm)->num_blocks))
-      fprintf(stderr, "Could not transmit data!\n");
+      dbgerr("Could not transmit data!\n");
 
     // Short delay between keys
     usleep(1000 * delay);
@@ -133,7 +133,7 @@ INLINED static void test_boot_mode(keyboard_t *kb, keyboard_boot_mode_t mode)
   scptr uint8_t *data = keyboard_ctl_frame_make(TYPE_BOOT_MODE);
   keyboard_ctl_frame_boot_mode_apply(data, mode);
   if (!keyboard_transmit(kb, data, mman_fetch_meta(data)->num_blocks))
-    fprintf(stderr, "Could not transmit data!\n");
+    dbgerr("Could not transmit data!\n");
 }
 
 INLINED static void test_deactivate(keyboard_t *kb, keyboard_ctl_frame_target_t target)
@@ -142,7 +142,7 @@ INLINED static void test_deactivate(keyboard_t *kb, keyboard_ctl_frame_target_t 
   scptr uint8_t *data = keyboard_ctl_frame_make(TYPE_DEACTIVATE);
   keyboard_ctl_frame_target_apply(data, target);
   if (!keyboard_transmit(kb, data, mman_fetch_meta(data)->num_blocks))
-    fprintf(stderr, "Could not transmit data!\n");
+    dbgerr("Could not transmit data!\n");
 }
 
 /*
@@ -155,56 +155,52 @@ int process(void)
 {
   // List available devices
   scptr char *list = keyboard_devman_list();
-  printf("Available devices:\n%s\n", list);
+  dbginf("Available devices:\n%s\n", list);
 
   // Parse and print the keymap
   scptr char *keymap_err = NULL;
   scptr htable_t *keymap = keyboard_keymapper_load(KEYMAP_FLOC, &keymap_err);
   if (!keymap)
-    fprintf(stderr, "ERROR: Could not parse the keymap at " QUOTSTR ": %s\n", KEYMAP_FLOC, keymap_err);
+    dbgerr("ERROR: Could not parse the keymap at " QUOTSTR ": %s\n", KEYMAP_FLOC, keymap_err);
   else
   {
     scptr char *parsed = iniparse_dump(keymap);
-    printf("Parsed keymap table:\n%s\n", parsed);
+    dbginf("Parsed keymap table:\n%s\n", parsed);
   }
 
   // Parse and print the animation
   scptr char *anim_err = NULL;
   scptr keyboard_animation_t *anim = keyboard_animation_load(ANIM_FLOC, &anim_err);
   if (!anim)
-    fprintf(stderr, "ERROR: Could not parse the animation at " QUOTSTR ": %s\n", ANIM_FLOC, anim_err);
+    dbgerr("ERROR: Could not parse the animation at " QUOTSTR ": %s\n", ANIM_FLOC, anim_err);
   else
   {
     scptr char *parsed = iniparse_dump(anim->ini);
-    printf("Parsed animation table:\n%s\n", parsed);
-    printf(
+    dbginf("Parsed animation table:\n%s\n", parsed);
+    dbginf(
       "Parsed animation frame_delay=%ld, draw_mode=%s, last_frame=%lu\n",
       anim->frame_del, keyboard_draw_mode_name(anim->draw_mode), anim->last_frame
     );
   }
 
-  // keyboard_key_t k_from = KEY_Z;
-  // keyboard_key_t k_to = keyboard_keymapper_lookup(keymap, "de", k_from);
-  // printf("%s -> %s\n", keyboard_key_name(k_from), keyboard_key_name(k_to));
-
   // No keyboard found
   scptr keyboard_t *kb = keyboard_devman_find(TKB_VID, TKB_PID, NULL);
   if (!kb)
   {
-    fprintf(stderr, "ERROR: Could not find the keyboard matching vid=%d and pid=%d!\n", TKB_VID, TKB_PID);
+    dbgerr("ERROR: Could not find the keyboard matching vid=%d and pid=%d!\n", TKB_VID, TKB_PID);
     hid_exit();
     return 1;
   }
 
   // Print keyboard
   scptr char *kb_dump = keyboard_dump(kb);
-  printf("Using the following keyboard:\n%s\n", kb_dump);
+  dbginf("Using the following keyboard:\n%s\n", kb_dump);
 
   // Open keyboard connection
   scptr char *kbop_err = NULL;
   if (!keyboard_open(kb, &kbop_err))
   {
-    fprintf(stderr, "ERROR: %s\n", kbop_err);
+    dbgerr("ERROR: %s\n", kbop_err);
     hid_exit();
     return 1;
   }
@@ -239,9 +235,9 @@ int process(void)
     for (; curr_frame <= anim->last_frame; curr_frame++)
     {
       if (!keyboard_animation_play(anim, kb, curr_frame, &anim_fb, &err))
-        fprintf(stderr, "ERROR: Could not play animation-frame %lu: %s\n", curr_frame, err);
+        dbgerr("ERROR: Could not play animation-frame %lu: %s\n", curr_frame, err);
       else
-        printf("Played animation frame %lu!\n", curr_frame);
+        dbginf("Played animation frame %lu!\n", curr_frame);
 
       // Delay between frames
       usleep(anim->frame_del * 1000);

@@ -18,7 +18,7 @@ mman_meta_t *mman_fetch_meta(void *ptr)
   mman_meta_t *meta = ptr - sizeof(mman_meta_t);
   if (ptr != meta->ptr)
   {
-    fprintf(stderr, "Invalid resource passed to \"mman_fetch_meta\"!\n");
+    dbgerr("Invalid resource passed to \"mman_fetch_meta\"!\n");
     return NULL;
   }
 
@@ -88,7 +88,7 @@ mman_meta_t *mman_realloc(void **ptr_ptr, size_t block_size, size_t num_blocks)
   mman_meta_t *meta = ptr - sizeof(mman_meta_t);
   if (ptr != meta->ptr)
   {
-    fprintf(stderr, "ERROR: Invalid resource passed to \"mman_realloc\"!\n");
+    dbgerr("ERROR: Invalid resource passed to \"mman_realloc\"!\n");
     return NULL;
   }
 
@@ -119,7 +119,7 @@ mman_result_t mman_dealloc_force(void *ptr)
   mman_meta_t *meta = mman_fetch_meta(ptr);
   if (!meta)
   {
-    fprintf(stderr, "ERROR: mman_dealloc_force received unknown ref!\n");
+    dbgerr("ERROR: mman_dealloc_force received unknown ref!\n");
     return MMAN_INVREF;
   }
 
@@ -140,7 +140,7 @@ mman_result_t mman_dealloc(void *ptr)
   mman_meta_t *meta = mman_fetch_meta(ptr);
   if (!meta)
   {
-    fprintf(stderr, "ERROR: mman_dealloc received unknown ref!\n");
+    dbgerr("ERROR: mman_dealloc received unknown ref!\n");
     return MMAN_INVREF;
   }
 
@@ -185,8 +185,8 @@ void *mman_ref(void *ptr)
 void mman_print_info(size_t us_del)
 {
 
-  printf("----------< MMAN Statistics >----------\n");
-  printf("> Allocated: %lu\n", mman_alloc_count);
-  printf("> Deallocated: %lu\n", mman_dealloc_count);
-  printf("----------< MMAN Statistics >----------\n");
+  dbginf("----------< MMAN Statistics >----------\n");
+  dbginf("> Allocated: %lu\n", mman_alloc_count);
+  dbginf("> Deallocated: %lu\n", mman_dealloc_count);
+  dbginf("----------< MMAN Statistics >----------\n");
 }

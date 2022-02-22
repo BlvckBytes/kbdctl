@@ -41,6 +41,7 @@ keyboard_animation_t *keyboard_animation_load(const char *floc, char **err);
  * @return true Frame sent to device successfully
  * @return false Could not send frame to device or frame out of range
  */
+// TODO: Add nullable ref to keyboard remapping table for optional remapping
 bool keyboard_animation_play(
   keyboard_animation_t *animation,
   keyboard_t *kb,
