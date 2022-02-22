@@ -178,8 +178,8 @@ int process(void)
     scptr char *parsed = iniparse_dump(anim->ini);
     dbginf("Parsed animation table:\n%s\n", parsed);
     dbginf(
-      "Parsed animation frame_delay=%ld, draw_mode=%s, last_frame=%lu\n",
-      anim->frame_del, keyboard_draw_mode_name(anim->draw_mode), anim->last_frame
+      "Parsed animation frame_delay=%ld, draw_mode=%s, last_frame=%lu, mapping_lang=%s\n",
+      anim->frame_del, keyboard_draw_mode_name(anim->draw_mode), anim->last_frame, anim->mapping_lang
     );
   }
 
@@ -234,7 +234,7 @@ int process(void)
     // Loop al frames and display one by one
     for (; curr_frame <= anim->last_frame; curr_frame++)
     {
-      if (!keyboard_animation_play(anim, kb, curr_frame, &anim_fb, &err))
+      if (!keyboard_animation_play(anim, keymap, kb, curr_frame, &anim_fb, &err))
         dbgerr("ERROR: Could not play animation-frame %lu: %s\n", curr_frame, err);
       else
         dbginf("Played animation frame %lu!\n", curr_frame);

@@ -17,9 +17,9 @@ I bought a Logitech G Pro TKL RGB keyboard a few weeks ago, and now I'm sick and
 - [X] Apply static color
 - [X] Apply built in animation
 - [X] Apply custom key lighting
-- [ ] Add custom keymap functionality using lookup table files
+- [X] Add custom keymap functionality using lookup table files
 - [ ] Write a small doc of C-API usage-examples
-- [ ] Create custom animations using key-array frames
+- [X] Create custom animations using key-array frames
 - [ ] Turn this into a daemon using web-sockets
 - [ ] Add the ability to store settings on profiles
 - [ ] Just maybe... add a GUI?

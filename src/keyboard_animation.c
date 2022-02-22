@@ -10,8 +10,9 @@ static void keyboard_animation_cleanup(mman_meta_t *meta)
 {
   keyboard_animation_t *anim = ((keyboard_animation_t *) meta->ptr);
 
-  // Dealloc the parsed ini
+  // Dealloc the parsed ini and the mapping language string
   mman_dealloc(anim->ini);
+  mman_dealloc(anim->mapping_lang);
 }
 
 keyboard_animation_t *keyboard_animation_load(const char *floc, char **err)
@@ -28,6 +29,7 @@ keyboard_animation_t *keyboard_animation_load(const char *floc, char **err)
   anim->frame_del = 200;
   anim->draw_mode = KDM_RESET_BEFORE;
   anim->last_frame = 0;
+  anim->mapping_lang = NULL;
 
   // Look for the last frame specified starting at 1 without any gaps
   for (size_t i = 1; i < SIZE_MAX; i++)
@@ -64,6 +66,9 @@ keyboard_animation_t *keyboard_animation_load(const char *floc, char **err)
       anim->draw_mode = draw_mode;
   }
 
+  // Load mapping language if defined
+  htable_fetch(settings, "mapping_lang", (void **) &(anim->mapping_lang));
+
   return mman_ref(anim);
 }
 
@@ -85,6 +90,7 @@ INLINED static void keyboard_animation_clear_keys(dynarr_t **framebuf)
 
 bool keyboard_animation_play(
   keyboard_animation_t *animation,
+  htable_t *keymap,
   keyboard_t *kb,
   size_t curr_frame,
   dynarr_t **framebuf,
@@ -131,6 +137,10 @@ bool keyboard_animation_play(
     keyboard_key_t key_val;
     if (keyboard_key_value(*key, &key_val) != ENUMLUT_SUCCESS)
       continue;
+
+    // Remap this key, if a map and a language has been provided
+    if (animation->mapping_lang && keymap)
+      key_val = keyboard_keymapper_lookup(keymap, animation->mapping_lang, key_val);
 
     char *rgb_str = NULL;
     if (htable_fetch(frame, *key, (void **) &rgb_str) != HTABLE_SUCCESS)
