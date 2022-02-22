@@ -2,6 +2,8 @@
 #define iniparse_h
 
 #include <stdlib.h>
+#include <errno.h>
+#include <string.h>
 
 #include "util/htable.h"
 #include "keyboard_key.h"

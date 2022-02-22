@@ -14,6 +14,6 @@
  * @param max_len Maximum length of the clone
  * @return char* Cloned string, NULL on errors
  */
-char *strclone(char *origin, size_t max_len);
+char *strclone(const char *origin, size_t max_len);
 
 #endif

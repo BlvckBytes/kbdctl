@@ -3,6 +3,7 @@
 
 #include "util/enumlut.h"
 
+// Keyboard key frame drawing mode and their corresponding values
 #define _EVALS_KEYBOARD_DRAW_MODE(FUN) \
   FUN(KDM_RESET_BEFORE,   0x00)        \
   FUN(AKDM_DD_PREV,       0x01)        \

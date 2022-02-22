@@ -48,7 +48,7 @@ keyboard_t *keyboard_devman_find(uint16_t vid, uint16_t pid, char *ser)
     if (
       dev->vendor_id == vid
       && dev->product_id == pid
-      && (!ser || strncmp(ser, ser_str, strlen(ser) == 0))
+      && (!ser || strncmp(ser, ser_str, strlen(ser)) == 0)
     )
     {
       // Convert and store

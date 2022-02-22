@@ -63,13 +63,13 @@ htable_t *htable_make(size_t item_cap, cleanup_fn_t cf)
  * @param slot_count Count of slots this table has
  * @return size_t Matching index in hash table
  */
-INLINED static size_t htable_hash(char *key, size_t slot_count)
+INLINED static size_t htable_hash(const char *key, size_t slot_count)
 {
   // Start out at the specified offset
   size_t hash = HTABLE_FNV_OFFSET;
 
   // Apply bitops for each char in the string
-  for (char *c = key; *c; c++)
+  for (const char *c = key; *c; c++)
   {
     hash ^= (size_t)(*c);
     hash *= HTABLE_FNV_PRIME;
@@ -78,7 +78,7 @@ INLINED static size_t htable_hash(char *key, size_t slot_count)
   return hash % slot_count;
 }
 
-htable_result_t htable_insert(htable_t *table, char *key, void *elem)
+htable_result_t htable_insert(htable_t *table, const char *key, void *elem)
 {
   // Already containing as many items as allowed
   if (table->_item_count >= table->_item_cap) return HTABLE_FULL;
@@ -105,7 +105,7 @@ htable_result_t htable_insert(htable_t *table, char *key, void *elem)
   return HTABLE_SUCCESS;
 }
 
-INLINED static htable_entry_t *find_entry(htable_t *table, char *key)
+INLINED static htable_entry_t *find_entry(htable_t *table, const char *key)
 {
   size_t slot_id = htable_hash(key, table->_slot_count);
   htable_entry_t *slot = table->slots[slot_id];
@@ -124,7 +124,7 @@ INLINED static htable_entry_t *find_entry(htable_t *table, char *key)
   return NULL;
 }
 
-bool htable_contains(htable_t *table, char *key)
+bool htable_contains(htable_t *table, const char *key)
 {
   size_t slot_id = htable_hash(key, table->_slot_count);
   htable_entry_t *slot = table->slots[slot_id];
@@ -145,7 +145,7 @@ bool htable_contains(htable_t *table, char *key)
   return false;
 }
 
-htable_result_t htable_remove(htable_t *table, char *key)
+htable_result_t htable_remove(htable_t *table, const char *key)
 {
   size_t slot_id = htable_hash(key, table->_slot_count);
   htable_entry_t *slot = table->slots[slot_id];
@@ -180,7 +180,7 @@ htable_result_t htable_remove(htable_t *table, char *key)
   return HTABLE_KEY_NOT_FOUND;
 }
 
-htable_result_t htable_fetch(htable_t *table, char *key, void **output)
+htable_result_t htable_fetch(htable_t *table, const char *key, void **output)
 {
   htable_entry_t *entry = find_entry(table, key);
 

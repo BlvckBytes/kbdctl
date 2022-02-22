@@ -1,6 +1,6 @@
 #include "util/strclone.h"
 
-char *strclone(char *origin, size_t max_len)
+char *strclone(const char *origin, size_t max_len)
 {
   // Validate that string length is within constraints
   size_t len = strlen(origin);

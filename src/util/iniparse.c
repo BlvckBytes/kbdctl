@@ -1,10 +1,9 @@
 #include "util/iniparse.h"
 
-#define iniparse_err(fmt, ...) \
-  { \
-    *err = mman_alloc(sizeof(char), INIPARSE_ERROR_INIT_LEN, NULL); \
-    strfmt(err, NULL, fmt, ##__VA_ARGS__); \
-    return NULL; \
+#define iniparse_err(fmt, ...)                 \
+  {                                            \
+    *err = strfmt_direct(fmt, ##__VA_ARGS__);  \
+    return NULL;                               \
   }
 
 htable_t *iniparse(const char *floc, char **err)
@@ -14,7 +13,10 @@ htable_t *iniparse(const char *floc, char **err)
 
   // Open keymap file
   FILE *f = fopen(floc, "r");
-  if (!f) return NULL;
+
+  // Could not open the file
+  if (!f)
+    iniparse_err("Could not open the file " QUOTSTR " (" QUOTSTR "!", floc, strerror(errno));
 
   // Reading utility buffers
   size_t read_len, buf_len, line_ind = 0;

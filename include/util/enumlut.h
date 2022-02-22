@@ -63,7 +63,8 @@
     {                                                             \
       /* Compare and return if the name matched */                \
       const char *curr = namearr[i];                              \
-      if (strncasecmp(name, curr, strlen(curr)) == 0) return i;   \
+      if (curr && strncasecmp(name, curr, strlen(curr)) == 0)     \
+        return i;                                                 \
     }                                                             \
     /* Key not found */                                           \
     return 0;                                                     \

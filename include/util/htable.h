@@ -97,7 +97,7 @@ htable_t *htable_make(size_t item_cap, cleanup_fn_t cf);
  * 
  * @return htable_result_t Result of this operation
  */
-htable_result_t htable_insert(htable_t *table, char *key, void *elem);
+htable_result_t htable_insert(htable_t *table, const char *key, void *elem);
 
 /**
  * @brief Check if the table already contains this key
@@ -108,7 +108,7 @@ htable_result_t htable_insert(htable_t *table, char *key, void *elem);
  * @return true Key exists
  * @return false Key does not exist
  */
-bool htable_contains(htable_t *table, char *key);
+bool htable_contains(htable_t *table, const char *key);
 
 /**
  * @brief Remove an element by it's key
@@ -118,7 +118,7 @@ bool htable_contains(htable_t *table, char *key);
  * 
  * @return htable_result_t Result of this operation
  */
-htable_result_t htable_remove(htable_t *table, char *key);
+htable_result_t htable_remove(htable_t *table, const char *key);
 
 /**
  * @brief Get an existing key's connected value
@@ -129,7 +129,7 @@ htable_result_t htable_remove(htable_t *table, char *key);
  * 
  * @return htable_result_t Result of this operation
  */
-htable_result_t htable_fetch(htable_t *table, char *key, void **output);
+htable_result_t htable_fetch(htable_t *table, const char *key, void **output);
 
 /**
  * @brief Append a table's entries into another table

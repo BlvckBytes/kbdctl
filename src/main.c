@@ -11,6 +11,7 @@
 #include "keyboard.h"
 #include "keyboard_ctl_frame.h"
 #include "keyboard_devman.h"
+#include "keyboard_keymapper.h"
 
 // Vendor- and product-id of the target device
 #define TKB_VID 0x046D
@@ -18,6 +19,12 @@
 
 // Location of the keymap config file (invalid paths are ignored)
 #define KEYMAP_FLOC "/Users/blvckbytes/.config/kbdctl/keymap.ini"
+
+/*
+============================================================================
+                               Test functions                               
+============================================================================
+*/
 
 INLINED static void test_apply_effect
 (
@@ -136,6 +143,12 @@ INLINED static void test_deactivate(keyboard_t *kb, keyboard_ctl_frame_target_t 
     fprintf(stderr, "Could not transmit data!\n");
 }
 
+/*
+============================================================================
+                                Main program                                
+============================================================================
+*/
+
 int process(void)
 {
   // List available devices
@@ -143,10 +156,10 @@ int process(void)
   printf("Available devices:\n%s\n", list);
 
   // Parse and print the keymap
-  scptr char *err = NULL;
-  scptr htable_t *keymap = iniparse(KEYMAP_FLOC, &err);
+  scptr char *keymap_err = NULL;
+  scptr htable_t *keymap = keyboard_keymapper_load(KEYMAP_FLOC, &keymap_err);
   if (!keymap)
-    fprintf(stderr, "ERROR: Could not parse the keymap at " QUOTSTR ": %s\n", KEYMAP_FLOC, err);
+    fprintf(stderr, "ERROR: Could not parse the keymap at " QUOTSTR ": %s\n", KEYMAP_FLOC, keymap_err);
   else
   {
     scptr char *parsed = iniparse_dump(keymap);
@@ -199,6 +212,9 @@ int process(void)
 
 int main(void)
 {
+  // Wrap the process into a separate function to have proper
+  // mman deallocation before mman info debugging. This helps
+  // me tremendously to find memory-leaks
   int ret = process();
   mman_print_info();
   return ret;
