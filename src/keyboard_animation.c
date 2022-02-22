@@ -67,6 +67,22 @@ keyboard_animation_t *keyboard_animation_load(const char *floc, char **err)
   return mman_ref(anim);
 }
 
+/**
+ * @brief Clear all available keys by setting their color to #000000
+ * 
+ * @param framebuf Framebuffer to clear the keys in
+ */
+INLINED static void keyboard_animation_clear_keys(dynarr_t **framebuf)
+{
+  // TODO: Hardcoding start- and endkeys here is not optimal...
+  for (size_t i = KEY_A; i <= KEY_WIN_RIGHT; i++)
+  {
+    keyboard_color_t rgb_color = { 0x00, 0x00, 0x00 };
+    scptr keyboard_key_color_t *key_color = keyboard_key_color_make(i, rgb_color);
+    dynarr_set_at(*framebuf, i, mman_ref(key_color));
+  }
+}
+
 bool keyboard_animation_play(
   keyboard_animation_t *animation,
   keyboard_t *kb,
@@ -91,8 +107,11 @@ bool keyboard_animation_play(
     // This basically means clearing on non-even frame indices (starting on 1)
     // Clearing: 1 3 5 ...
     || (animation->draw_mode == KDM_ADD_PREV && curr_frame % 2 != 0)
+
+    // Start out with a cleared buffer on the first frame
+    || curr_frame == 1
   )
-    dynarr_clear(*framebuf);
+    keyboard_animation_clear_keys(framebuf);
 
   // Get frame contents
   scptr char *frame_sect = strfmt_direct("%lu", curr_frame);
