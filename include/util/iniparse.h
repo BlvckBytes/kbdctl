@@ -30,10 +30,10 @@
 htable_t *iniparse(const char *floc, char **err);
 
 /**
- * @brief Print a parsed keymap to stdout for debugging purposes
+ * @brief Dump a parsed keymap
  * 
- * @param keymap Keymap to print
+ * @param keymap Keymap to dump
  */
-void iniparse_print(htable_t *keymap);
+char *iniparse_dump(htable_t *keymap);
 
 #endif

@@ -3,12 +3,14 @@
 #include <unistd.h>
 
 #include "util/mman.h"
-#include "keyboard.h"
 #include "util/strconv.h"
-#include "keyboard_ctl_frame.h"
 #include "util/dynarr.h"
 #include "util/htable.h"
 #include "util/iniparse.h"
+
+#include "keyboard.h"
+#include "keyboard_ctl_frame.h"
+#include "keyboard_devman.h"
 
 // Vendor- and product-id of the target device
 #define TKB_VID 0x046D
@@ -136,13 +138,19 @@ INLINED static void test_deactivate(keyboard_t *kb, keyboard_ctl_frame_target_t 
 
 int process(void)
 {
+  scptr char *list = keyboard_devman_list();
+  printf("Available devices:\n%s\n", list);
+
   // Parse and print the keymap
   scptr char *err = NULL;
   scptr htable_t *keymap = iniparse(KEYMAP_FLOC, &err);
   if (!keymap)
     fprintf(stderr, "ERROR: Could not parse the keymap at " QUOTSTR ": %s\n", KEYMAP_FLOC, err);
   else
-    iniparse_print(keymap);
+  {
+    scptr char *parsed = iniparse_dump(keymap);
+    printf("Parsed keymap:\n%s\n", parsed);
+  }
 
   struct hid_device_info *henum, *dev;
   hid_init();

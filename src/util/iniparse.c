@@ -114,9 +114,8 @@ static char *iniparse_stringify_kv(void *item)
   return mman_ref(res);
 }
 
-void iniparse_print(htable_t *keymap)
+char *iniparse_dump(htable_t *keymap)
 {
-  printf("Parsed keymap:\n");
   scptr char *dump = htable_dump_hr(keymap, iniparse_stringify_kv);
-  printf("%s", dump);
+  return mman_ref(dump);
 }

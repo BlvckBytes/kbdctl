@@ -3,8 +3,12 @@
 
 #include <stdbool.h>
 #include <stdarg.h>
+#include <string.h>
 
 #include "util/mman.h"
+
+// Replace empty strings with a questionmark
+#define STRFMT_EMPTYMARK(str) strlen(str) == 0 ? "?" : str
 
 /**
  * @brief Format a string and re-allocate it's buffer dynamically as needed
