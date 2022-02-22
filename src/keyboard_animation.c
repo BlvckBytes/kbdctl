@@ -83,6 +83,10 @@ bool keyboard_animation_play(
   if (*framebuf == NULL)
     *framebuf = dynarr_make(256, 256, mman_dealloc_nr);
 
+  // Clear the framebuffer if resetting before each frame is desired
+  if (animation->draw_mode == KDM_RESET_BEFORE)
+    dynarr_clear(*framebuf);
+
   // Get frame contents
   scptr char *frame_sect = strfmt_direct("%lu", curr_frame);
   htable_t *frame = NULL;

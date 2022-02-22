@@ -189,3 +189,18 @@ size_t dynarr_as_array(dynarr_t *arr, void ***out)
   *out = mman_ref(res);
   return active_slots;
 }
+
+void dynarr_clear(dynarr_t *arr)
+{
+  // Iterate from tail to head
+  for (size_t i = 0; i < arr->_array_size; i++)
+  {
+    // Skip free slots
+    if (arr->items[i] == NULL) continue;
+
+    // Free this slot and deallocate
+    void *elem;
+    if (dynarr_remove_at(arr, i, &elem) == dynarr_SUCCESS)
+      mman_dealloc(elem);
+  }
+}

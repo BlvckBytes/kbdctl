@@ -118,4 +118,11 @@ char *dynarr_dump_hr_strs(dynarr_t *arr);
  */
 size_t dynarr_as_array(dynarr_t *arr, void ***out);
 
+/**
+ * @brief Clear the whole array by clearing all individual slots
+ * 
+ * @param arr Array to clear
+ */
+void dynarr_clear(dynarr_t *arr);
+
 #endif
