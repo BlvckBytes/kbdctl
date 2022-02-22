@@ -166,6 +166,10 @@ int process(void)
     printf("Parsed keymap:\n%s\n", parsed);
   }
 
+  // keyboard_key_t k_from = KEY_Z;
+  // keyboard_key_t k_to = keyboard_keymapper_lookup(keymap, "de", k_from);
+  // printf("%s -> %s\n", keyboard_key_name(k_from), keyboard_key_name(k_to));
+
   // No keyboard found
   scptr keyboard_t *kb = keyboard_devman_find(TKB_VID, TKB_PID, NULL);
   if (!kb)
