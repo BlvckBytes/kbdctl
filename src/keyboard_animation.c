@@ -82,9 +82,16 @@ bool keyboard_animation_play(
   // Initialize a framebuffer if it's not yet existing
   if (*framebuf == NULL)
     *framebuf = dynarr_make(256, 256, mman_dealloc_nr);
+  
+  if (
+    // Clear the framebuffer if resetting before each frame is desired
+    animation->draw_mode == KDM_RESET_BEFORE
 
-  // Clear the framebuffer if resetting before each frame is desired
-  if (animation->draw_mode == KDM_RESET_BEFORE)
+    // Only keep the previous state, clear the framebuffer otherwise
+    // This basically means clearing on non-even frame indices (starting on 1)
+    // Clearing: 1 3 5 ...
+    || (animation->draw_mode == KDM_ADD_PREV && curr_frame % 2 != 0)
+  )
     dynarr_clear(*framebuf);
 
   // Get frame contents
@@ -130,11 +137,8 @@ bool keyboard_animation_play(
   }
 
   // Get current key array state
-  // TODO: Implement drawing modes as this currently is just KDM_ADD_ALL
   scptr keyboard_key_color_t **key_arr = NULL;
   size_t num_keys = dynarr_as_array(*framebuf, (void ***) &key_arr);
-
-  printf("num_keys=%lu\n", num_keys);
 
   // Make items frame
   scptr uint8_t *data_keys = keyboard_ctl_frame_make(TYPE_KEYS);

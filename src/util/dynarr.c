@@ -123,9 +123,9 @@ dynarr_result_t dynarr_remove_at(dynarr_t *arr, size_t index, void **out)
   if (index < 0 || index >= arr->_array_size) return dynarr_INDEX_NOT_FOUND;
 
   // Write pointer to output buffer, clear slot
-  void *slot = arr->items[index];
-  if (out) *out = slot;
-  slot = NULL;
+  void **slot = &(arr->items[index]);
+  if (out) *out = *slot;
+  *slot = NULL;
   return dynarr_SUCCESS;
 }
 

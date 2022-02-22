@@ -88,7 +88,7 @@ mman_meta_t *mman_realloc(void **ptr_ptr, size_t block_size, size_t num_blocks)
   mman_meta_t *meta = ptr - sizeof(mman_meta_t);
   if (ptr != meta->ptr)
   {
-    fprintf(stderr, "Invalid resource passed to \"mman_realloc\"!\n");
+    fprintf(stderr, "ERROR: Invalid resource passed to \"mman_realloc\"!\n");
     return NULL;
   }
 
