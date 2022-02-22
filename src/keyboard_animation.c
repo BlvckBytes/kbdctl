@@ -8,7 +8,7 @@ static void keyboard_animation_cleanup(mman_meta_t *meta)
   mman_dealloc(anim->animation);
 }
 
-keyboard_animation_t *keyboard_animaton_load(const char *floc, char **err)
+keyboard_animation_t *keyboard_animation_load(const char *floc, char **err)
 {
   // Try to parse the ini file
   scptr htable_t *ini = iniparse(floc, err, 512, 256);
@@ -21,6 +21,17 @@ keyboard_animation_t *keyboard_animaton_load(const char *floc, char **err)
   // Define fallback values
   anim->frame_del = 200;
   anim->draw_mode = KDM_RESET_BEFORE;
+  anim->last_frame = 0;
+
+  // Look for the last frame specified starting at 1 without any gaps
+  for (size_t i = 1; i < SIZE_MAX; i++)
+  {
+    // Stop on missing frame section
+    scptr char *i_str = strfmt_direct("%lu", i);
+    if (!htable_contains(ini, i_str)) break;
+    // Set the last frame to the currently reached section
+    anim->last_frame = i;
+  }
 
   // Try to load the settings section
   htable_t *settings = NULL;

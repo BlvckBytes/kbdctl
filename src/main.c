@@ -170,7 +170,7 @@ int process(void)
 
   // Parse and print the animation
   scptr char *anim_err = NULL;
-  scptr keyboard_animation_t *anim = keyboard_animaton_load(ANIM_FLOC, &anim_err);
+  scptr keyboard_animation_t *anim = keyboard_animation_load(ANIM_FLOC, &anim_err);
   if (!anim)
     fprintf(stderr, "ERROR: Could not parse the animation at " QUOTSTR ": %s\n", ANIM_FLOC, anim_err);
   else
@@ -178,8 +178,8 @@ int process(void)
     scptr char *parsed = iniparse_dump(anim->animation);
     printf("Parsed animation table:\n%s\n", parsed);
     printf(
-      "Parsed animation frame_delay=%ld, draw_mode=%s\n",
-      anim->frame_del, keyboard_draw_mode_name(anim->draw_mode)
+      "Parsed animation frame_delay=%ld, draw_mode=%s, last_frame=%lu\n",
+      anim->frame_del, keyboard_draw_mode_name(anim->draw_mode), anim->last_frame
     );
   }
 
