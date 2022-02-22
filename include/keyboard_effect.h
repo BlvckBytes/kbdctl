@@ -1,6 +1,8 @@
 #ifndef keyboard_effect_h
 #define keyboard_effect_h
 
+#include "util/enumlut.h"
+
 /**
  * @brief What direction should the wave animate in?
  */
@@ -15,24 +17,24 @@ enum _keyboard_wave_type
   _WAVE_CIRC_CENTER_IN   = 0x08          // Circular wave from the outside in
 };
 
-/**
- * @brief What effect should be applied?
- * INFO: Bitmasking is only done for convenience and not done in the
- * INFO: protocol, hence separate enumerations
- */
-typedef enum keyboard_effect
-{
-  EFFECT_COLOR                 = 0x01,                                           // Static color
-  EFFECT_BREATHING             = 0x02,                                           // Breathing static color
-  EFFECT_CYCLE                 = 0x03,                                           // Cycle through all colors
-  _EFFECT_WAVE                 = 0x04,                                           // Wave mode, only used for bitmasking
-  EFFECT_WAVE_CYCLE            = _EFFECT_WAVE | (_WAVE_CYCLE            << 8),   // Wave effect (see corresponding type)
-  EFFECT_WAVE_HORIZONTAL       = _EFFECT_WAVE | (_WAVE_HORIZONTAL       << 8),   // Wave effect (see corresponding type)
-  EFFECT_WAVE_HORIZONTAL_REV   = _EFFECT_WAVE | (_WAVE_HORIZONTAL_REV   << 8),   // Wave effect (see corresponding type)
-  EFFECT_WAVE_VERTICAL         = _EFFECT_WAVE | (_WAVE_VERTICAL         << 8),   // Wave effect (see corresponding type)
-  EFFECT_WAVE_VERTICAL_REV     = _EFFECT_WAVE | (_WAVE_VERTICAL_REV     << 8),   // Wave effect (see corresponding type)
-  EFFECT_WAVE_CIRC_CENTER_OUT  = _EFFECT_WAVE | (_WAVE_CIRC_CENTER_OUT  << 8),   // Wave effect (see corresponding type)
-  EFFECT_WAVE_CIRC_CENTER_IN   = _EFFECT_WAVE | (_WAVE_CIRC_CENTER_IN   << 8)    // Wave effect (see corresponding type)
-} keyboard_effect_t;
+// Wave effect base bitmask
+#define _EFFECT_WAVE 0x04
+
+// What effect should be applied?
+// INFO: Bitmasking is only done for convenience and not done in the
+// INFO: protocol, hence separate enumerations
+#define _EVALS_KEYBOARD_EFFECT(FUN)                                                \
+  FUN(EFFECT_COLOR,                 0x01)                                          \
+  FUN(EFFECT_BREATHING,             0x02)                                          \
+  FUN(EFFECT_CYCLE,                 0x03)                                          \
+  FUN(EFFECT_WAVE_CYCLE,            _EFFECT_WAVE | (_WAVE_CYCLE            << 8))  \
+  FUN(EFFECT_WAVE_HORIZONTAL,       _EFFECT_WAVE | (_WAVE_HORIZONTAL       << 8))  \
+  FUN(EFFECT_WAVE_HORIZONTAL_REV,   _EFFECT_WAVE | (_WAVE_HORIZONTAL_REV   << 8))  \
+  FUN(EFFECT_WAVE_VERTICAL,         _EFFECT_WAVE | (_WAVE_VERTICAL         << 8))  \
+  FUN(EFFECT_WAVE_VERTICAL_REV,     _EFFECT_WAVE | (_WAVE_VERTICAL_REV     << 8))  \
+  FUN(EFFECT_WAVE_CIRC_CENTER_OUT,  _EFFECT_WAVE | (_WAVE_CIRC_CENTER_OUT  << 8))  \
+  FUN(EFFECT_WAVE_CIRC_CENTER_IN,   _EFFECT_WAVE | (_WAVE_CIRC_CENTER_IN   << 8)) 
+
+ENUM_TYPEDEF_FULL_IMPL(keyboard_effect, _EVALS_KEYBOARD_EFFECT);
 
 #endif
