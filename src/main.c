@@ -84,9 +84,9 @@ INLINED static void test_loop_keys(
     // Create current key-color and push into array
     scptr keyboard_key_color_t *key_color = keyboard_key_color_make(i, color);
 
-    // Dealloc this color it it didn't fit into the array anymore
+    // Could not push the color
     if (dynarr_push(keys, mman_ref(key_color), NULL) != dynarr_SUCCESS)
-      mman_dealloc(key_color);
+      continue;
 
     // Get current key array state
     scptr keyboard_key_color_t **key_arr = NULL;
@@ -175,7 +175,7 @@ int process(void)
     fprintf(stderr, "ERROR: Could not parse the animation at " QUOTSTR ": %s\n", ANIM_FLOC, anim_err);
   else
   {
-    scptr char *parsed = iniparse_dump(anim->animation);
+    scptr char *parsed = iniparse_dump(anim->ini);
     printf("Parsed animation table:\n%s\n", parsed);
     printf(
       "Parsed animation frame_delay=%ld, draw_mode=%s, last_frame=%lu\n",
@@ -223,9 +223,33 @@ int process(void)
   // test_apply_effect(kb, EFFECT_BREATHING, TARG_LOGO, 1000, (keyboard_color_t) { 0x00, 0x00, 0xFF });
   // test_apply_status_color(kb, (keyboard_color_t) { 0xFF, 0x00, 0x00 });
   // test_boot_mode(kb, BOOT_FACTORY);
-  test_loop_keys(kb, (keyboard_color_t) { 0xFF, 0x00, 0x00 }, 300, false);
+  // test_loop_keys(kb, (keyboard_color_t) { 0xFF, 0x00, 0x00 }, 300, false);
   // test_deactivate(kb, TARG_LOGO);
   // test_deactivate(kb, TARG_KEYS);
+
+  // External buffers for animation playing
+  scptr dynarr_t *anim_fb = NULL;
+  scptr char *err = NULL;
+  size_t curr_frame = 1;
+
+  // Draw frames multiple times in a row (for debugging purposes, later this will be an endless but stoppable loop)
+  for (size_t i = 0; i < 5; i++)
+  {
+    // Loop al frames and display one by one
+    for (; curr_frame <= anim->last_frame; curr_frame++)
+    {
+      if (!keyboard_animation_play(anim, kb, curr_frame, &anim_fb, &err))
+        fprintf(stderr, "ERROR: Could not play animation-frame %lu: %s\n", curr_frame, err);
+      else
+        printf("Played animation frame %lu!\n", curr_frame);
+
+      // Delay between frames
+      usleep(anim->frame_del * 1000);
+    }
+
+    // Reset frame index
+    curr_frame = 1;
+  }
 
   hid_exit();
   return 0;

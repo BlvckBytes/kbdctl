@@ -93,10 +93,10 @@ dynarr_result_t dynarr_set_at(dynarr_t *arr, size_t index, void *item)
   if (index < 0 || index >= arr->_array_size) return dynarr_INDEX_NOT_FOUND;
 
   // Free old entry, if any
-  void *slot = arr->items[index];
-  if (slot) arr->_cf(slot);
+  void **slot = &(arr->items[index]);
+  if (*slot) arr->_cf(*slot);
 
-  slot = item;
+  *slot = item;
   return dynarr_SUCCESS;
 }
 
