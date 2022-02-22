@@ -69,7 +69,7 @@ typedef enum enumlut_result
     {                                                             \
       /* Compare and return if the name matched */                \
       const char *curr = namearr[i];                              \
-      if (curr && strncasecmp(name, curr, strlen(curr)) == 0)     \
+      if (curr && strcasecmp(name, curr) == 0)                    \
       {                                                           \
         *out = i;                                                 \
         return ENUMLUT_SUCCESS;                                   \

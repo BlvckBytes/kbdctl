@@ -85,6 +85,8 @@ INLINED static void keyboard_animation_clear_keys(dynarr_t **framebuf)
     keyboard_color_t rgb_color = { 0x00, 0x00, 0x00 };
     scptr keyboard_key_color_t *key_color = keyboard_key_color_make(i, rgb_color);
     dynarr_set_at(*framebuf, i, mman_ref(key_color));
+
+    if (i == KEY_MENU) i = KEY_CTRL_LEFT - 1; // Jump gap
   }
 }
 
@@ -136,7 +138,10 @@ bool keyboard_animation_play(
     // Just skip invalid keys
     keyboard_key_t key_val;
     if (keyboard_key_value(*key, &key_val) != ENUMLUT_SUCCESS)
+    {
+      dbgerr("Invalid key in animation-frame %lu: %s\n", curr_frame, *key);
       continue;
+    }
 
     // Remap this key, if a map and a language has been provided
     if (animation->mapping_lang && keymap)
@@ -158,6 +163,8 @@ bool keyboard_animation_play(
       rgb_color.g = (rgb_val >> 8)  & 0xFF;
       rgb_color.b = (rgb_val >> 0)  & 0xFF;
     }
+    else
+      dbgerr("Invalid color in animation-frame %lu: %s\n", curr_frame, rgb_str);
 
     // Try to set the key within the framebuffer
     scptr keyboard_key_color_t *key_color = keyboard_key_color_make(key_val, rgb_color);
@@ -181,7 +188,7 @@ bool keyboard_animation_play(
       kbanim_err("Could not transmit (partial) frame data!");
 
     // Small delay between control frames
-    usleep(1000 * 5);
+    usleep(800);
   }
 
   // Commit changes and thus make them visible
