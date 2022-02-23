@@ -79,14 +79,18 @@ keyboard_animation_t *keyboard_animation_load(const char *floc, char **err)
  */
 INLINED static void keyboard_animation_clear_keys(dynarr_t **framebuf)
 {
-  // TODO: Hardcoding start- and endkeys here is not optimal...
-  for (size_t i = KEY_A; i <= KEY_WIN_RIGHT; i++)
+  // Loop all available keys
+  for (size_t i = 0; i < keyboard_key_length(); i++)
   {
-    keyboard_color_t rgb_color = { 0x00, 0x00, 0x00 };
-    scptr keyboard_key_color_t *key_color = keyboard_key_color_make(i, rgb_color);
-    dynarr_set_at(*framebuf, i, mman_ref(key_color));
+    // Get the key by it's index, continue on failure
+    keyboard_key_t key;
+    if (keyboard_key_by_index(i, &key) != ENUMLUT_SUCCESS)
+      continue;
 
-    if (i == KEY_MENU) i = KEY_CTRL_LEFT - 1; // Jump gap
+    // Set the key to off (0x000000)
+    keyboard_color_t rgb_color = { 0x00, 0x00, 0x00 };
+    scptr keyboard_key_color_t *key_color = keyboard_key_color_make(key, rgb_color);
+    dynarr_set_at(*framebuf, key, mman_ref(key_color));
   }
 }
 
