@@ -2,7 +2,37 @@
 
 /*
 ============================================================================
-                                  Commands                                  
+                               Shared Routines                              
+============================================================================
+*/
+
+INLINED static void keyboard_prompt_write_targets(char **buf, size_t *buf_offs)
+{
+  // Fill in available targets from enum
+  size_t len = keyboard_ctl_frame_target_length();
+  for (size_t i = 0; i < len; i++)
+  {
+    keyboard_ctl_frame_target_t tar;
+    if (keyboard_ctl_frame_target_by_index(i, &tar) == ENUMLUT_SUCCESS)
+      strfmt(buf, buf_offs, "%s%s", i == 0 ? "" : "/", keyboard_ctl_frame_target_name(tar));
+  }
+}
+
+INLINED static void keyboard_prompt_write_bootmode(char **buf, size_t *buf_offs)
+{
+  // Fill in available bootmodes from enum
+  size_t len = keyboard_boot_mode_length();
+  for (size_t i = 0; i < len; i++)
+  {
+    keyboard_boot_mode_t tar;
+    if (keyboard_boot_mode_by_index(i, &tar) == ENUMLUT_SUCCESS)
+      strfmt(buf, buf_offs, "%s%s", i == 0 ? "" : "/", keyboard_boot_mode_name(tar));
+  }
+}
+
+/*
+============================================================================
+                               Command "LIST"                               
 ============================================================================
 */
 
@@ -10,6 +40,12 @@ INLINED static char *keyboard_prompt_list(char *args, keyboard_prompt_state_t *s
 {
   return keyboard_devman_list();
 }
+
+/*
+============================================================================
+                               Command "SELECT"                             
+============================================================================
+*/
 
 INLINED static char *keyboard_prompt_select(char *args, keyboard_prompt_state_t *state)
 {
@@ -50,6 +86,12 @@ INLINED static char *keyboard_prompt_select(char *args, keyboard_prompt_state_t 
   return strfmt_direct("Successfully selected the device %s:%s!\n", vid, pid);
 }
 
+/*
+============================================================================
+                              Command "UNSELECT"                            
+============================================================================
+*/
+
 INLINED static char *keyboard_prompt_unselect(char *args, keyboard_prompt_state_t *state)
 {
   if (!state->kb)
@@ -59,6 +101,12 @@ INLINED static char *keyboard_prompt_unselect(char *args, keyboard_prompt_state_
   state->kb = NULL;
   return strfmt_direct("Device unselected!\n");
 }
+
+/*
+============================================================================
+                                Command "WHAT"                              
+============================================================================
+*/
 
 INLINED static char *keyboard_prompt_what(char *args, keyboard_prompt_state_t *state)
 {
@@ -74,17 +122,11 @@ INLINED static char *keyboard_prompt_what(char *args, keyboard_prompt_state_t *s
   );
 }
 
-INLINED static void keyboard_prompt_write_targets(char **buf, size_t *buf_offs)
-{
-  // Fill in available targets from enum
-  size_t len = keyboard_ctl_frame_target_length();
-  for (size_t i = 0; i < len; i++)
-  {
-    keyboard_ctl_frame_target_t tar;
-    if (keyboard_ctl_frame_target_by_index(i, &tar) == ENUMLUT_SUCCESS)
-      strfmt(buf, buf_offs, "%s%s", i == 0 ? "" : "/", keyboard_ctl_frame_target_name(tar));
-  }
-}
+/*
+============================================================================
+                               Command "EFFECT"                             
+============================================================================
+*/
 
 INLINED static char *keyboard_prompt_effect_gen_usage()
 {
@@ -184,6 +226,53 @@ INLINED static char *keyboard_prompt_effect(char *args, keyboard_prompt_state_t 
   return keyboard_prompt_effect_gen_usage();
 }
 
+/*
+============================================================================
+                              Command "BOOTMODE"                            
+============================================================================
+*/
+
+INLINED static char *keyboard_prompt_bootmode_gen_usage()
+{
+  scptr char *buf = (char *) mman_alloc(sizeof(char), 128, NULL);
+  size_t buf_offs = 0;
+  strfmt(&buf, &buf_offs, "Usage: bootmode <");
+  keyboard_prompt_write_bootmode(&buf, &buf_offs);
+  strfmt(&buf, &buf_offs, ">\n");
+  return mman_ref(buf);
+}
+
+INLINED static char *keyboard_prompt_bootmode(char *args, keyboard_prompt_state_t *state)
+{
+  if (!state->kb)
+    return strfmt_direct("No device selected!\n");
+
+  size_t args_offs = 0;
+  scptr char *bootmode = partial_strdup(args, &args_offs, " ", false);
+
+  if (!bootmode)
+    return keyboard_prompt_bootmode_gen_usage();
+
+  // Parse bootmode from string
+  keyboard_boot_mode_t mode;
+  if (keyboard_boot_mode_value(bootmode, &mode) != ENUMLUT_SUCCESS)
+    return strfmt_direct("Unknown bootmode: " QUOTSTR "\n", bootmode);
+  
+  // Create parameterized deactivate frame and send
+  scptr uint8_t *data = keyboard_ctl_frame_make(TYPE_BOOT_MODE);
+  keyboard_ctl_frame_boot_mode_apply(data, mode);
+  if (!keyboard_transmit(state->kb, data, mman_fetch_meta(data)->num_blocks))
+    return strfmt_direct("Could not transmit data to the device!\n");
+
+  return strfmt_direct("Set bootmode to " QUOTSTR "!\n", keyboard_boot_mode_name(mode));
+}
+
+/*
+============================================================================
+                             Command "DEACTIVATE"                           
+============================================================================
+*/
+
 INLINED static char *keyboard_prompt_deactivate_gen_usage()
 {
   scptr char *buf = (char *) mman_alloc(sizeof(char), 128, NULL);
@@ -216,8 +305,14 @@ INLINED static char *keyboard_prompt_deactivate(char *args, keyboard_prompt_stat
   if (!keyboard_transmit(state->kb, data, mman_fetch_meta(data)->num_blocks))
     return strfmt_direct("Could not transmit data to the device!\n");
 
-  return strfmt_direct("Deactivated %s!\n", keyboard_ctl_frame_target_name(targ));
+  return strfmt_direct("Deactivated " QUOTSTR "!\n", keyboard_ctl_frame_target_name(targ));
 }
+
+/*
+============================================================================
+                                Command "EXIT"                              
+============================================================================
+*/
 
 INLINED static char *keyboard_prompt_exit(char *args, keyboard_prompt_state_t *state)
 {
@@ -275,7 +370,6 @@ INLINED static htable_t *keyboard_prompt_build_command_table()
   scptr htable_t *cmds = htable_make(32, NULL);
 
   // TODO: Statuscolor
-  // TODO: Bootmode
   // TODO: Set key color individually
   // TODO: Run animations
 
@@ -285,6 +379,7 @@ INLINED static htable_t *keyboard_prompt_build_command_table()
   htable_insert(cmds, "unselect", keyboard_prompt_unselect);
   htable_insert(cmds, "effect", keyboard_prompt_effect);
   htable_insert(cmds, "deactivate", keyboard_prompt_deactivate);
+  htable_insert(cmds, "bootmode", keyboard_prompt_bootmode);
   htable_insert(cmds, "exit", keyboard_prompt_exit);
 
   return mman_ref(cmds);

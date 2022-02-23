@@ -29,23 +29,6 @@
 ============================================================================
 */
 
-INLINED static void test_apply_effect
-(
-  keyboard_t *kb,
-  keyboard_effect_t effect,
-  keyboard_ctl_frame_target_t target,
-  uint16_t time,
-  keyboard_color_t color
-)
-{
-  // Create parameterized effect frame and send
-  scptr uint8_t *data = keyboard_ctl_frame_make(TYPE_EFFECT);
-  keyboard_ctl_frame_effect_apply(data, effect, time, color, true);
-  keyboard_ctl_frame_target_apply(data, target);
-  if (!keyboard_transmit(kb, data, mman_fetch_meta(data)->num_blocks))
-    dbgerr("Could not transmit data!\n");
-}
-
 INLINED static void test_apply_status_color
 (
   keyboard_t *kb,
@@ -72,8 +55,7 @@ INLINED static void test_apply_status_color
 INLINED static void test_loop_keys(
   keyboard_t *kb,
   keyboard_color_t color,
-  uint16_t delay,
-  bool red_logo_before_setting
+  uint16_t delay
 )
 {
   // Create dynamic array where all key colors are stored
@@ -96,15 +78,6 @@ INLINED static void test_loop_keys(
     // Make items frame
     scptr uint8_t *data_keys = keyboard_ctl_frame_make(TYPE_KEYS);
 
-    // Make the logo flash up red before setting the key (to find non-available keys)
-    if (red_logo_before_setting)
-    {
-      test_apply_effect(kb, EFFECT_COLOR, TARG_LOGO, 0, (keyboard_color_t) { 0xFF, 0x00, 0x00 });
-      usleep(1000 * 500);
-      test_apply_effect(kb, EFFECT_COLOR, TARG_LOGO, 0, (keyboard_color_t) { 0x00, 0x00, 0xFF });
-      usleep(1000 * 10);
-    }
-
     // Append all keys and send, may take multiple frames as one frame has limited capacity
     size_t keys_offs = 0;
     while (num_keys != keys_offs)
@@ -126,24 +99,6 @@ INLINED static void test_loop_keys(
     // Skip gap
     if (i == KEY_MENU) i = KEY_CTRL_LEFT - 1;
   }
-}
-
-INLINED static void test_boot_mode(keyboard_t *kb, keyboard_boot_mode_t mode)
-{
-  // Create parameterized boot mode frame and send
-  scptr uint8_t *data = keyboard_ctl_frame_make(TYPE_BOOT_MODE);
-  keyboard_ctl_frame_boot_mode_apply(data, mode);
-  if (!keyboard_transmit(kb, data, mman_fetch_meta(data)->num_blocks))
-    dbgerr("Could not transmit data!\n");
-}
-
-INLINED static void test_deactivate(keyboard_t *kb, keyboard_ctl_frame_target_t target)
-{
-  // Create parameterized boot mode frame and send
-  scptr uint8_t *data = keyboard_ctl_frame_make(TYPE_DEACTIVATE);
-  keyboard_ctl_frame_target_apply(data, target);
-  if (!keyboard_transmit(kb, data, mman_fetch_meta(data)->num_blocks))
-    dbgerr("Could not transmit data!\n");
 }
 
 /*
