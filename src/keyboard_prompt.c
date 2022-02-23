@@ -74,21 +74,24 @@ INLINED static char *keyboard_prompt_what(char *args, keyboard_prompt_state_t *s
   );
 }
 
-INLINED static char *keyboard_prompt_effect_gen_usage()
+INLINED static void keyboard_prompt_write_targets(char **buf, size_t *buf_offs)
 {
-  scptr char *buf = (char *) mman_alloc(sizeof(char), 128, NULL);
-  size_t buf_offs = 0;
-  strfmt(&buf, &buf_offs, "Usage: effect <list/apply> <effect> [<");
-
   // Fill in available targets from enum
   size_t len = keyboard_ctl_frame_target_length();
   for (size_t i = 0; i < len; i++)
   {
     keyboard_ctl_frame_target_t tar;
     if (keyboard_ctl_frame_target_by_index(i, &tar) == ENUMLUT_SUCCESS)
-      strfmt(&buf, &buf_offs, "%s%s", i == 0 ? "" : "/", keyboard_ctl_frame_target_name(tar));
+      strfmt(buf, buf_offs, "%s%s", i == 0 ? "" : "/", keyboard_ctl_frame_target_name(tar));
   }
+}
 
+INLINED static char *keyboard_prompt_effect_gen_usage()
+{
+  scptr char *buf = (char *) mman_alloc(sizeof(char), 128, NULL);
+  size_t buf_offs = 0;
+  strfmt(&buf, &buf_offs, "Usage: effect <list/apply> <effect> [<");
+  keyboard_prompt_write_targets(&buf, &buf_offs);
   strfmt(&buf, &buf_offs, "> <time in ms> [color as hex]]\n");
   return mman_ref(buf);
 }
@@ -181,6 +184,41 @@ INLINED static char *keyboard_prompt_effect(char *args, keyboard_prompt_state_t 
   return keyboard_prompt_effect_gen_usage();
 }
 
+INLINED static char *keyboard_prompt_deactivate_gen_usage()
+{
+  scptr char *buf = (char *) mman_alloc(sizeof(char), 128, NULL);
+  size_t buf_offs = 0;
+  strfmt(&buf, &buf_offs, "Usage: deactivate <");
+  keyboard_prompt_write_targets(&buf, &buf_offs);
+  strfmt(&buf, &buf_offs, ">\n");
+  return mman_ref(buf);
+}
+
+INLINED static char *keyboard_prompt_deactivate(char *args, keyboard_prompt_state_t *state)
+{
+  if (!state->kb)
+    return strfmt_direct("No device selected!\n");
+
+  size_t args_offs = 0;
+  scptr char *target = partial_strdup(args, &args_offs, " ", false);
+
+  if (!target)
+    return keyboard_prompt_deactivate_gen_usage();
+
+  // Parse target from string
+  keyboard_ctl_frame_target_t targ;
+  if (keyboard_ctl_frame_target_value(target, &targ) != ENUMLUT_SUCCESS)
+    return strfmt_direct("Unknown target: " QUOTSTR "\n", target);
+  
+  // Create parameterized deactivate frame and send
+  scptr uint8_t *data = keyboard_ctl_frame_make(TYPE_DEACTIVATE);
+  keyboard_ctl_frame_target_apply(data, targ);
+  if (!keyboard_transmit(state->kb, data, mman_fetch_meta(data)->num_blocks))
+    return strfmt_direct("Could not transmit data to the device!\n");
+
+  return strfmt_direct("Deactivated %s!\n", keyboard_ctl_frame_target_name(targ));
+}
+
 INLINED static char *keyboard_prompt_exit(char *args, keyboard_prompt_state_t *state)
 {
   // Invoke unselect routine and dealloc it's result, as it's not needed
@@ -238,7 +276,6 @@ INLINED static htable_t *keyboard_prompt_build_command_table()
 
   // TODO: Statuscolor
   // TODO: Bootmode
-  // TODO: Deactivate
   // TODO: Set key color individually
   // TODO: Run animations
 
@@ -247,6 +284,7 @@ INLINED static htable_t *keyboard_prompt_build_command_table()
   htable_insert(cmds, "what", keyboard_prompt_what);
   htable_insert(cmds, "unselect", keyboard_prompt_unselect);
   htable_insert(cmds, "effect", keyboard_prompt_effect);
+  htable_insert(cmds, "deactivate", keyboard_prompt_deactivate);
   htable_insert(cmds, "exit", keyboard_prompt_exit);
 
   return mman_ref(cmds);
