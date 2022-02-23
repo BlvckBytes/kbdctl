@@ -9,10 +9,14 @@
 #include "keyboard_devman.h"
 #include "keyboard.h"
 #include "keyboard_ctl_frame_target.h"
+#include "keyboard_animation.h"
 #include "keyboard_keymapper.h"
 #include "keyboard_effect.h"
 #include "keyboard_color.h"
 #include "keyboard_ctl_frame.h"
+
+// TODO: Don't use hardcoded paths
+#define KEYMAP_FLOC_BASEPATH "/Users/blvckbytes/.config/kbdctl/animations"
 
 /**
  * @brief Represents the state of the prompter which gets manipulated by commands
@@ -22,6 +26,7 @@ typedef struct keyboard_prompt_state
   keyboard_t *kb;
   htable_t *commands;
   htable_t *mappings;
+  keyboard_animation_t *curr_anim;
   bool prompting;
 } keyboard_prompt_state_t;
 

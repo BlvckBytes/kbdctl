@@ -6,7 +6,7 @@
 
 // Debug modes
 #define DEBUG_ERR
-#define DEBUG_INF
+// #define DEBUG_INF
 
 /**
  * @brief Debug log error messages

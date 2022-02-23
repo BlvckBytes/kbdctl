@@ -16,7 +16,7 @@ htable_t *iniparse(const char *floc, char **err, size_t max_secs, size_t max_key
 
   // Could not open the file
   if (!f)
-    iniparse_err("Could not open the file " QUOTSTR " (" QUOTSTR "!", floc, strerror(errno));
+    iniparse_err("Could not open the file " QUOTSTR " (" QUOTSTR ")!", floc, strerror(errno));
 
   // Reading utility buffers
   size_t read_len, buf_len, line_ind = 0;

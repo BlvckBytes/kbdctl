@@ -184,9 +184,9 @@ void *mman_ref(void *ptr)
 
 void mman_print_info(size_t us_del)
 {
-
-  dbginf("----------< MMAN Statistics >----------\n");
-  dbginf("> Allocated: %lu\n", mman_alloc_count);
-  dbginf("> Deallocated: %lu\n", mman_dealloc_count);
-  dbginf("----------< MMAN Statistics >----------\n");
+  // Print as errors to also have this screen in non-info-debug mode
+  dbgerr("----------< MMAN Statistics >----------\n");
+  dbgerr("> Allocated: %lu\n", mman_alloc_count);
+  dbgerr("> Deallocated: %lu\n", mman_dealloc_count);
+  dbgerr("----------< MMAN Statistics >----------\n");
 }

@@ -30,6 +30,17 @@ INLINED static void keyboard_prompt_write_bootmode(char **buf, size_t *buf_offs)
   }
 }
 
+INLINED static void keyboard_prompt_kill_animation(keyboard_prompt_state_t *state)
+{
+  // Quit previous animation
+  if (state->curr_anim)
+  {
+    keyboard_animation_quit(state->curr_anim);
+    mman_dealloc(state->curr_anim);
+    state->curr_anim = NULL;
+  }
+}
+
 /*
 ============================================================================
                                Command "LIST"                               
@@ -96,6 +107,9 @@ INLINED static char *keyboard_prompt_unselect(char *args, keyboard_prompt_state_
 {
   if (!state->kb)
     return strfmt_direct("No device selected!\n");
+
+  // Kill any existing animation
+  keyboard_prompt_kill_animation(state);
 
   mman_dealloc(state->kb);
   state->kb = NULL;
@@ -213,6 +227,9 @@ INLINED static char *keyboard_prompt_effect(char *args, keyboard_prompt_state_t 
     if (store && strcasecmp(store, "true"))
       store_b = true;
 
+    // Kill any existing animation
+    keyboard_prompt_kill_animation(state);
+
     // Create parameterized effect frame and send
     scptr uint8_t *data = keyboard_ctl_frame_make(TYPE_EFFECT);
     keyboard_ctl_frame_effect_apply(data, eff, time_l, kcol, store_b);
@@ -298,6 +315,10 @@ INLINED static char *keyboard_prompt_deactivate(char *args, keyboard_prompt_stat
   keyboard_ctl_frame_target_t targ;
   if (keyboard_ctl_frame_target_value(target, &targ) != ENUMLUT_SUCCESS)
     return strfmt_direct("Unknown target: " QUOTSTR "\n", target);
+
+  // Kill any existing animation
+  if (targ == TARG_KEYS)
+    keyboard_prompt_kill_animation(state);
   
   // Create parameterized deactivate frame and send
   scptr uint8_t *data = keyboard_ctl_frame_make(TYPE_DEACTIVATE);
@@ -418,6 +439,9 @@ INLINED static char *keyboard_prompt_key(char *args, keyboard_prompt_state_t *st
     if (keymap_lang)
       k = keyboard_keymapper_lookup(state->mappings, keymap_lang, k);
 
+    // Kill any existing animation
+    keyboard_prompt_kill_animation(state);
+
     // Make parameterized items frame
     size_t keys_offs = 0, num_keys = 1;
     scptr keyboard_key_color_t *k_color = keyboard_key_color_make(k, kcol);
@@ -442,12 +466,55 @@ INLINED static char *keyboard_prompt_key(char *args, keyboard_prompt_state_t *st
 
 /*
 ============================================================================
+                             Command "ANIMATION"                            
+============================================================================
+*/
+
+INLINED static char *keyboard_prompt_animation_gen_usage()
+{
+  return strfmt_direct("Usage: animation <name>\n");
+}
+
+INLINED static char *keyboard_prompt_animation(char *args, keyboard_prompt_state_t *state)
+{
+  if (!state->kb)
+    return strfmt_direct("No device selected!\n");
+
+  size_t args_offs = 0;
+  scptr char *name = partial_strdup(args, &args_offs, " ", false);
+
+  if (!name)
+    return keyboard_prompt_animation_gen_usage();
+
+  // Parse animation from file
+  scptr char *anim_err = NULL;
+  scptr char *anim_path = strfmt_direct(KEYMAP_FLOC_BASEPATH "/%s.ini", name);
+  scptr keyboard_animation_t *anim = keyboard_animation_load(anim_path, &anim_err);
+  if (!anim)
+    return strfmt_direct("Could not parse the animation at " QUOTSTR ": %s\n", anim_path, anim_err);
+
+  keyboard_prompt_kill_animation(state);
+
+  // Launch animation
+  if (!keyboard_animation_launch(anim, state->mappings, state->kb))
+    return strfmt_direct("Could not launch the animation " QUOTSTR "!\n", name);
+
+  state->curr_anim = mman_ref(anim);
+
+  return strfmt_direct("Launched animation " QUOTSTR "!\n", name);
+}
+
+/*
+============================================================================
                                 Command "EXIT"                              
 ============================================================================
 */
 
 INLINED static char *keyboard_prompt_exit(char *args, keyboard_prompt_state_t *state)
 {
+  // Kill any existing animation
+  keyboard_prompt_kill_animation(state);
+
   // Invoke unselect routine and dealloc it's result, as it's not needed
   mman_dealloc(keyboard_prompt_unselect(NULL, state));
 
@@ -498,8 +565,6 @@ INLINED static htable_t *keyboard_prompt_build_command_table()
 {
   scptr htable_t *cmds = htable_make(32, NULL);
 
-  // TODO: Run animations
-
   htable_insert(cmds, "list", keyboard_prompt_list);
   htable_insert(cmds, "select", keyboard_prompt_select);
   htable_insert(cmds, "what", keyboard_prompt_what);
@@ -508,6 +573,7 @@ INLINED static htable_t *keyboard_prompt_build_command_table()
   htable_insert(cmds, "deactivate", keyboard_prompt_deactivate);
   htable_insert(cmds, "bootmode", keyboard_prompt_bootmode);
   htable_insert(cmds, "statuscolor", keyboard_prompt_statuscolor);
+  htable_insert(cmds, "animation", keyboard_prompt_animation);
   htable_insert(cmds, "key", keyboard_prompt_key);
   htable_insert(cmds, "exit", keyboard_prompt_exit);
 
@@ -528,6 +594,7 @@ static void keyboard_prompt_state_cleanup(mman_meta_t *meta)
   mman_dealloc(state->kb);
   mman_dealloc(state->commands);
   mman_dealloc(state->mappings);
+  mman_dealloc(state->curr_anim);
 }
 
 keyboard_prompt_state_t *keyboard_prompt_state_make(const char *keymap_floc)
@@ -537,6 +604,7 @@ keyboard_prompt_state_t *keyboard_prompt_state_make(const char *keymap_floc)
   // Set defaults
   state->kb = NULL;
   state->prompting = true;
+  state->curr_anim = NULL;
 
   // Initialize command table
   state->commands = keyboard_prompt_build_command_table();
