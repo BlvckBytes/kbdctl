@@ -1,6 +1,6 @@
 #include "keyboard_animation.h"
 
-#define kbanim_err(fmt, ...)                 \
+#define kbanim_err(fmt, ...)                   \
   {                                            \
     *err = strfmt_direct(fmt, ##__VA_ARGS__);  \
     return false;                              \

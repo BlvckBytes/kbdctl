@@ -9,6 +9,8 @@
 #define GENERATE_ENUM(ENUM, OFFS) ENUM = OFFS,
 #define GENERATE_STRING(ENUM, OFFS) [OFFS] = #ENUM,
 
+// TODO: Think about how to iterate enum values and provide a count of all entries by a getter function
+
 typedef enum enumlut_result
 {
   ENUMLUT_SUCCESS,
