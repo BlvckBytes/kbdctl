@@ -9,6 +9,7 @@
 #include "keyboard_devman.h"
 #include "keyboard.h"
 #include "keyboard_ctl_frame_target.h"
+#include "keyboard_keymapper.h"
 #include "keyboard_effect.h"
 #include "keyboard_color.h"
 #include "keyboard_ctl_frame.h"
@@ -20,6 +21,7 @@ typedef struct keyboard_prompt_state
 {
   keyboard_t *kb;
   htable_t *commands;
+  htable_t *mappings;
   bool prompting;
 } keyboard_prompt_state_t;
 
@@ -39,7 +41,9 @@ char *keyboard_prompt_process(char *input, keyboard_prompt_state_t *state);
 
 /**
  * @brief Create a new prompt-state with default values
+ * 
+ * @param keymap_floc File location of the keymap ini
  */
-keyboard_prompt_state_t *keyboard_prompt_state_make();
+keyboard_prompt_state_t *keyboard_prompt_state_make(const char *keymap_floc);
 
 #endif

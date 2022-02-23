@@ -25,68 +25,13 @@
 
 /*
 ============================================================================
-                               Test functions                               
-============================================================================
-*/
-
-INLINED static void test_loop_keys(
-  keyboard_t *kb,
-  keyboard_color_t color,
-  uint16_t delay
-)
-{
-  // Create dynamic array where all key colors are stored
-  scptr dynarr_t *keys = dynarr_make(16, 256, mman_dealloc_nr);
-
-  // Iterate full range of keys
-  for (size_t i = KEY_A; i <= KEY_WIN_RIGHT; i++)
-  {
-    // Create current key-color and push into array
-    scptr keyboard_key_color_t *key_color = keyboard_key_color_make(i, color);
-
-    // Could not push the color
-    if (dynarr_push(keys, mman_ref(key_color), NULL) != dynarr_SUCCESS)
-      continue;
-
-    // Get current key array state
-    scptr keyboard_key_color_t **key_arr = NULL;
-    size_t num_keys = dynarr_as_array(keys, (void ***) &key_arr);
-
-    // Make items frame
-    scptr uint8_t *data_keys = keyboard_ctl_frame_make(TYPE_KEYS);
-
-    // Append all keys and send, may take multiple frames as one frame has limited capacity
-    size_t keys_offs = 0;
-    while (num_keys != keys_offs)
-    {
-      keyboard_ctl_frame_key_list_apply(data_keys, key_arr, num_keys, KGA_KEY, &keys_offs);
-      if (!keyboard_transmit(kb, data_keys, mman_fetch_meta(data_keys)->num_blocks))
-        dbgerr("Could not transmit data!\n");
-      usleep(1000 * 10);
-    }
-
-    // Commit changes and thus make them visible
-    scptr uint8_t *data_comm = keyboard_ctl_frame_make(TYPE_COMMIT);
-    if (!keyboard_transmit(kb, data_comm, mman_fetch_meta(data_comm)->num_blocks))
-      dbgerr("Could not transmit data!\n");
-
-    // Short delay between keys
-    usleep(1000 * delay);
-
-    // Skip gap
-    if (i == KEY_MENU) i = KEY_CTRL_LEFT - 1;
-  }
-}
-
-/*
-============================================================================
                                 Main program                                
 ============================================================================
 */
 
 int process(void)
 {
-  scptr keyboard_prompt_state_t *kbs = keyboard_prompt_state_make();
+  scptr keyboard_prompt_state_t *kbs = keyboard_prompt_state_make(KEYMAP_FLOC);
   while (kbs->prompting)
   {
     char *line = NULL;
@@ -108,60 +53,20 @@ int process(void)
     printf("%s", answ);
   }
 
-  // As I'm currently working on the prompt, just comment it out for "normal operation"
-  return 0;
-
-  // List available devices
-  scptr char *list = keyboard_devman_list();
-  dbginf("Available devices:\n%s\n", list);
-
-  // Parse and print the keymap
-  scptr char *keymap_err = NULL;
-  scptr htable_t *keymap = keyboard_keymapper_load(KEYMAP_FLOC, &keymap_err);
-  if (!keymap)
-    dbgerr("ERROR: Could not parse the keymap at " QUOTSTR ": %s\n", KEYMAP_FLOC, keymap_err);
-  else
-  {
-    scptr char *parsed = iniparse_dump(keymap);
-    dbginf("Parsed keymap table:\n%s\n", parsed);
-  }
-
   // Parse and print the animation
-  scptr char *anim_err = NULL;
-  scptr keyboard_animation_t *anim = keyboard_animation_load(ANIM_FLOC, &anim_err);
-  if (!anim)
-    dbgerr("ERROR: Could not parse the animation at " QUOTSTR ": %s\n", ANIM_FLOC, anim_err);
-  else
-  {
-    scptr char *parsed = iniparse_dump(anim->ini);
-    dbginf("Parsed animation table:\n%s\n", parsed);
-    dbginf(
-      "Parsed animation frame_delay=%ld, draw_mode=%s, last_frame=%lu, mapping_lang=%s\n",
-      anim->frame_del, keyboard_draw_mode_name(anim->draw_mode), anim->last_frame, anim->mapping_lang
-    );
-  }
-
-  // No keyboard found
-  scptr keyboard_t *kb = keyboard_devman_find(TKB_VID, TKB_PID, NULL);
-  if (!kb)
-  {
-    dbgerr("ERROR: Could not find the keyboard matching vid=%d and pid=%d!\n", TKB_VID, TKB_PID);
-    hid_exit();
-    return 1;
-  }
-
-  // Print keyboard
-  scptr char *kb_dump = keyboard_dump(kb);
-  dbginf("Using the following keyboard:\n%s\n", kb_dump);
-
-  // Open keyboard connection
-  scptr char *kbop_err = NULL;
-  if (!keyboard_open(kb, &kbop_err))
-  {
-    dbgerr("ERROR: %s\n", kbop_err);
-    hid_exit();
-    return 1;
-  }
+  // scptr char *anim_err = NULL;
+  // scptr keyboard_animation_t *anim = keyboard_animation_load(ANIM_FLOC, &anim_err);
+  // if (!anim)
+  //   dbgerr("ERROR: Could not parse the animation at " QUOTSTR ": %s\n", ANIM_FLOC, anim_err);
+  // else
+  // {
+  //   scptr char *parsed = iniparse_dump(anim->ini);
+  //   dbginf("Parsed animation table:\n%s\n", parsed);
+  //   dbginf(
+  //     "Parsed animation frame_delay=%ld, draw_mode=%s, last_frame=%lu, mapping_lang=%s\n",
+  //     anim->frame_del, keyboard_draw_mode_name(anim->draw_mode), anim->last_frame, anim->mapping_lang
+  //   );
+  // }
 
   // if (keyboard_animation_launch(anim, keymap, kb))
   // {
