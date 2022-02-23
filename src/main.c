@@ -13,6 +13,7 @@
 #include "keyboard_devman.h"
 #include "keyboard_keymapper.h"
 #include "keyboard_animation.h"
+#include "keyboard_prompt.h"
 
 // Vendor- and product-id of the target device
 #define TKB_VID 0x046D
@@ -153,6 +154,31 @@ INLINED static void test_deactivate(keyboard_t *kb, keyboard_ctl_frame_target_t 
 
 int process(void)
 {
+  scptr keyboard_prompt_state_t *kbs = keyboard_prompt_state_make();
+  while (kbs->prompting)
+  {
+    char *line = NULL;
+    size_t line_len = 0;
+
+    // Try to read a line from STDIN
+    if (getline(&line, &line_len, stdin) <= 0)
+    {
+      free(line);
+      continue;
+    }
+
+    // Process this request
+    scptr char *req = strtrim(line);
+    scptr char *answ = keyboard_prompt_process(req, kbs);
+    free(line);
+
+    // Print response
+    printf("%s", answ);
+  }
+
+  // As I'm currently working on the prompt, just comment it out for "normal operation"
+  return 0;
+
   // List available devices
   scptr char *list = keyboard_devman_list();
   dbginf("Available devices:\n%s\n", list);

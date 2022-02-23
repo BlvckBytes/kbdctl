@@ -1,0 +1,3 @@
+#include "keyboard_ctl_frame_target.h"
+
+ENUM_LUT_FULL_IMPL(keyboard_ctl_frame_target, _EVALS_KEYBOARD_CTL_FRAME_TARGET);

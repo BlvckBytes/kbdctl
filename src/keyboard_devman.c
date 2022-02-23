@@ -16,10 +16,14 @@ char *keyboard_devman_list()
     scptr char *prod_str = strconv(dev->product_string, 128);
     scptr char *ser_str = strconv(dev->serial_number, 128);
 
+    // Never use root interfaces as this would block typing
+    if (dev->interface_number == 0)
+      continue;
+
     // Append current device to buffer
     strfmt(
       &res, &res_offs,
-      "VID=0x%04X (" QUOTSTR "), PID=%04X (" QUOTSTR "), SER=" QUOTSTR ", PATH=" QUOTSTR "\n",
+      "VID=%04X (" QUOTSTR "), PID=%04X (" QUOTSTR "), SER=" QUOTSTR ", PATH=" QUOTSTR "\n",
       dev->vendor_id,
       STRFMT_EMPTYMARK(man_str),
       dev->product_id,

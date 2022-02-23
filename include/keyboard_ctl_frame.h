@@ -10,6 +10,7 @@
 #include "keyboard_effect.h"
 #include "keyboard_boot_mode.h"
 #include "keyboard_group_addr.h"
+#include "keyboard_ctl_frame_target.h"
 
 /* 
   20 byte frame structure:
@@ -63,15 +64,6 @@ typedef enum keyboard_ctl_frame_type
   TYPE_DEACTIVATE     = 0x0D3E,       // Deactivate the lighting
   TYPE_BOOT_MODE      = 0x0D5A        // Set up into which mode the kbd will boot
 } keyboard_ctl_frame_type_t;
-
-/**
- * @brief Where will the change be applied to?
- */
-typedef enum keyboard_ctl_frame_target
-{
-  TARG_KEYS           = 0x00,         // This frame will change key lighting
-  TARG_LOGO           = 0x01          // This frame will change logo lighting
-} keyboard_ctl_frame_target_t;
 
 /**
  * @brief Create a zero initialized frame matching a certain type

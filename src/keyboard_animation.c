@@ -164,13 +164,7 @@ bool keyboard_animation_dispatch_frame(
     // Try to parse the rgb value from base 16, fallback to 0 on malformed values
     long rgb_val = 0;
     if (longp(&rgb_val, rgb_str, 16) == LONGP_SUCCESS)
-    {
-      // R  G  B
-      // XX XX XX
-      rgb_color.r = (rgb_val >> 16) & 0xFF;
-      rgb_color.g = (rgb_val >> 8)  & 0xFF;
-      rgb_color.b = (rgb_val >> 0)  & 0xFF;
-    }
+      keyboard_color_apply_number(&rgb_color, rgb_val);
     else
       dbgerr("Invalid color in animation-frame %lu: %s\n", animation->curr_frame, rgb_str);
 
@@ -235,6 +229,8 @@ static void *keyboard_animation_thread(void *arg)
     // Reset frame index
     anim->curr_frame = 1;
   }
+
+  return NULL;
 }
 
 bool keyboard_animation_launch(

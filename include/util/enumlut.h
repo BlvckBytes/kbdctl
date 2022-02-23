@@ -21,6 +21,18 @@
   * Enum get value by name             enum_name##_value(name, out)
   * Enum get length                    enum_name##_length()
   * Enum get value by index            enum_name##_by_index(index, out)
+  * 
+  * Basically just call it like this:
+  * 
+  * header file:          ENUM_TYPEDEF_FULL_IMPL(name, values-macro);
+  * source file:          ENUM_LUT_FULL_IMPL(name, values-macro);
+  * 
+  * Where the values macro looks something like this:
+  * 
+  * #define _EVALS_<name>(FUN)  \
+  *   FUN(<a>, 0x01) \
+  *   FUN(<b>, 0x02) \
+  * ...
 */
 
 /**
