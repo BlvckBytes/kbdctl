@@ -29,29 +29,6 @@
 ============================================================================
 */
 
-INLINED static void test_apply_status_color
-(
-  keyboard_t *kb,
-  keyboard_color_t color
-)
-{
-  // Create items frame and both available status colors
-  scptr uint8_t *data = keyboard_ctl_frame_make(TYPE_KEYS);
-  scptr keyboard_key_color_t *stat_backl = keyboard_key_color_make(KEY_STATUS_BACKLIGHT, color);
-  scptr keyboard_key_color_t *stat_game = keyboard_key_color_make(KEY_STATUS_GAME, color);
-  keyboard_key_color_t *keys_arr[] = {stat_backl, stat_game};
-
-  size_t num_keys = sizeof(keys_arr) / sizeof(keyboard_key_color_t *), statuses_offs = 0;
-  keyboard_ctl_frame_key_list_apply(data, keys_arr, num_keys, KGA_STATUS, &statuses_offs);
-  if (!keyboard_transmit(kb, data, mman_fetch_meta(data)->num_blocks))
-    dbgerr("Could not transmit data!\n");
-
-  // Commit changes and thus make them visible
-  scptr uint8_t *data_comm = keyboard_ctl_frame_make(TYPE_COMMIT);
-  if (!keyboard_transmit(kb, data_comm, mman_fetch_meta(data_comm)->num_blocks))
-    dbgerr("Could not transmit data!\n");
-}
-
 INLINED static void test_loop_keys(
   keyboard_t *kb,
   keyboard_color_t color,

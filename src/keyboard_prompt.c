@@ -310,6 +310,50 @@ INLINED static char *keyboard_prompt_deactivate(char *args, keyboard_prompt_stat
 
 /*
 ============================================================================
+                           Command "STATUSCOLOR"                           
+============================================================================
+*/
+
+INLINED static char *keyboard_prompt_statuscolor(char *args, keyboard_prompt_state_t *state)
+{
+  if (!state->kb)
+    return strfmt_direct("No device selected!\n");
+
+  size_t args_offs = 0;
+  scptr char *color = partial_strdup(args, &args_offs, " ", false);
+
+  if (!color)
+    return strfmt_direct("Usage: statuscolor <color as hex>\n");
+
+  // Parse status color
+  keyboard_color_t kcol = { 0x00, 0x00, 0x00 };
+  long color_l;
+  if (longp(&color_l, color, 16) != LONGP_SUCCESS)
+    return strfmt_direct("Invalid color hexadecimal number: %s\n", color);
+  keyboard_color_apply_number(&kcol, color_l);
+
+  // Create items frame and both available status colors
+  scptr uint8_t *data = keyboard_ctl_frame_make(TYPE_KEYS);
+  scptr keyboard_key_color_t *stat_backl = keyboard_key_color_make(KEY_STATUS_BACKLIGHT, kcol);
+  scptr keyboard_key_color_t *stat_game = keyboard_key_color_make(KEY_STATUS_GAME, kcol);
+  keyboard_key_color_t *keys_arr[] = {stat_backl, stat_game};
+
+  // Transmit keys frame
+  size_t num_keys = sizeof(keys_arr) / sizeof(keyboard_key_color_t *), statuses_offs = 0;
+  keyboard_ctl_frame_key_list_apply(data, keys_arr, num_keys, KGA_STATUS, &statuses_offs);
+  if (!keyboard_transmit(state->kb, data, mman_fetch_meta(data)->num_blocks))
+    return strfmt_direct("Could not transmit data to the device!\n");
+
+  // Commit changes and thus make them visible
+  scptr uint8_t *data_comm = keyboard_ctl_frame_make(TYPE_COMMIT);
+  if (!keyboard_transmit(state->kb, data_comm, mman_fetch_meta(data_comm)->num_blocks))
+    return strfmt_direct("Could not transmit data to the device!\n");
+
+  return strfmt_direct("Applied statuscolor %s!\n", color);
+}
+
+/*
+============================================================================
                                 Command "EXIT"                              
 ============================================================================
 */
@@ -369,7 +413,6 @@ INLINED static htable_t *keyboard_prompt_build_command_table()
 {
   scptr htable_t *cmds = htable_make(32, NULL);
 
-  // TODO: Statuscolor
   // TODO: Set key color individually
   // TODO: Run animations
 
@@ -380,6 +423,7 @@ INLINED static htable_t *keyboard_prompt_build_command_table()
   htable_insert(cmds, "effect", keyboard_prompt_effect);
   htable_insert(cmds, "deactivate", keyboard_prompt_deactivate);
   htable_insert(cmds, "bootmode", keyboard_prompt_bootmode);
+  htable_insert(cmds, "statuscolor", keyboard_prompt_statuscolor);
   htable_insert(cmds, "exit", keyboard_prompt_exit);
 
   return mman_ref(cmds);
