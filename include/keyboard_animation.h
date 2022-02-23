@@ -2,6 +2,7 @@
 #define keyboard_animation_h
 
 #include <unistd.h>
+#include <pthread.h>
 
 #include "keyboard_draw_mode.h"
 #include "keyboard_keymapper.h"
@@ -17,10 +18,19 @@
 typedef struct keyboard_animation
 {
   htable_t *ini;                        // Full animation INI table
-  long frame_del;                       // Delay in milliseconds between frames
-  long last_frame;                      // Last frame specified without gaps
+
   keyboard_draw_mode_t draw_mode;       // Draw mode to use for data-management between frames
-  char *mapping_lang;                   // Mapping language to apply
+  long last_frame;                      // Last frame specified without gaps
+  long curr_frame;                      // Currently displayed frame, 0 = none
+  long frame_del;                       // Delay in milliseconds between frames
+
+  pthread_t thread;                     // Executing thread
+  bool looping;                         // Whether or not the thread's loop is active
+  keyboard_t *device;                   // Device to be executed on
+  dynarr_t *framebuffer;                // Framebuffer representing state of all keys
+
+  htable_t *keymap;                     // Keymap for key-transformations, optional
+  char *mapping_lang;                   // Mapping language to apply, optional
 } keyboard_animation_t;
 
 /**
@@ -36,22 +46,39 @@ keyboard_animation_t *keyboard_animation_load(const char *floc, char **err);
  * @brief Play a pre-loaded keyboard animation on a specified keyboard device
  * 
  * @param animation Animation to play
- * @param keymap Keymap for remapping keys, optional and NULLable
  * @param kb Keyboard to play on
- * @param curr_frame External current frame index tracker
- * @param framebuf External framebuffer, leave at NULL for auto-initialization
  * @param err Error string buffer, leave at NULL if not needed
  * 
  * @return true Frame sent to device successfully
  * @return false Could not send frame to device or frame out of range
  */
-bool keyboard_animation_play(
+bool keyboard_animation_dispatch_frame(
   keyboard_animation_t *animation,
-  htable_t *keymap,
   keyboard_t *kb,
-  size_t curr_frame,
-  dynarr_t **framebuf,
   char **err
 );
+
+/**
+ * @brief Launch a previously loaded animation in a loop on a certain device
+ * 
+ * @param animation Animation to launch
+ * @param keymap Keymap to be used by the animation, NULLable
+ * @param kb Keyboard device to execute on
+ * 
+ * @returns true On successful thread instantiation
+ * @returns false On internal errors
+ */
+bool keyboard_animation_launch(
+  keyboard_animation_t *animation,
+  htable_t *keymap,
+  keyboard_t *kb
+);
+
+/**
+ * @brief Quit the animation if it's currently looping, do nothing otherwise
+ * 
+ * @param animation Animation to quit
+ */
+void keyboard_animation_quit(keyboard_animation_t *animation);
 
 #endif

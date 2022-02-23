@@ -13,6 +13,7 @@ static void keyboard_animation_cleanup(mman_meta_t *meta)
   // Dealloc the parsed ini and the mapping language string
   mman_dealloc(anim->ini);
   mman_dealloc(anim->mapping_lang);
+  mman_dealloc(anim->framebuffer);
 }
 
 keyboard_animation_t *keyboard_animation_load(const char *floc, char **err)
@@ -30,6 +31,13 @@ keyboard_animation_t *keyboard_animation_load(const char *floc, char **err)
   anim->draw_mode = KDM_RESET_BEFORE;
   anim->last_frame = 0;
   anim->mapping_lang = NULL;
+
+  // Define defaul values
+  anim->curr_frame = 0;
+  anim->keymap = NULL;
+  anim->device = NULL;
+  anim->framebuffer = NULL;
+  anim->looping = false;
 
   // Look for the last frame specified starting at 1 without any gaps
   for (size_t i = 1; i < SIZE_MAX; i++)
@@ -68,7 +76,6 @@ keyboard_animation_t *keyboard_animation_load(const char *floc, char **err)
 
   // Load mapping language if defined
   htable_fetch(settings, "mapping_lang", (void **) &(anim->mapping_lang));
-
   return mman_ref(anim);
 }
 
@@ -94,22 +101,19 @@ INLINED static void keyboard_animation_clear_keys(dynarr_t **framebuf)
   }
 }
 
-bool keyboard_animation_play(
+bool keyboard_animation_dispatch_frame(
   keyboard_animation_t *animation,
-  htable_t *keymap,
   keyboard_t *kb,
-  size_t curr_frame,
-  dynarr_t **framebuf,
   char **err
 )
 {
   // Check frame index validity
-  if (curr_frame > animation->last_frame)
-    kbanim_err("Frame index out of range! (%lu)", curr_frame);
+  if (animation->curr_frame > animation->last_frame)
+    kbanim_err("Frame index out of range! (%lu)", animation->curr_frame);
 
   // Initialize a framebuffer if it's not yet existing
-  if (*framebuf == NULL)
-    *framebuf = dynarr_make(256, 256, mman_dealloc_nr);
+  if (animation->framebuffer == NULL)
+    animation->framebuffer = dynarr_make(256, 256, mman_dealloc_nr);
   
   if (
     // Clear the framebuffer if resetting before each frame is desired
@@ -118,15 +122,15 @@ bool keyboard_animation_play(
     // Only keep the previous state, clear the framebuffer otherwise
     // This basically means clearing on non-even frame indices (starting on 1)
     // Clearing: 1 3 5 ...
-    || (animation->draw_mode == KDM_ADD_PREV && curr_frame % 2 != 0)
+    || (animation->draw_mode == KDM_ADD_PREV && animation->curr_frame % 2 != 0)
 
     // Start out with a cleared buffer on the first frame
-    || curr_frame == 1
+    || animation->curr_frame == 1
   )
-    keyboard_animation_clear_keys(framebuf);
+    keyboard_animation_clear_keys(&(animation->framebuffer));
 
   // Get frame contents
-  scptr char *frame_sect = strfmt_direct("%lu", curr_frame);
+  scptr char *frame_sect = strfmt_direct("%lu", animation->curr_frame);
   htable_t *frame = NULL;
   if (htable_fetch(animation->ini, frame_sect, (void **) &frame) != HTABLE_SUCCESS)
     kbanim_err("Frame section not found! (" QUOTSTR ")", frame_sect);
@@ -143,13 +147,13 @@ bool keyboard_animation_play(
     keyboard_key_t key_val;
     if (keyboard_key_value(*key, &key_val) != ENUMLUT_SUCCESS)
     {
-      dbgerr("Invalid key in animation-frame %lu: %s\n", curr_frame, *key);
+      dbgerr("Invalid key in animation-frame %lu: %s\n", animation->curr_frame, *key);
       continue;
     }
 
     // Remap this key, if a map and a language has been provided
-    if (animation->mapping_lang && keymap)
-      key_val = keyboard_keymapper_lookup(keymap, animation->mapping_lang, key_val);
+    if (animation->mapping_lang && animation->keymap)
+      key_val = keyboard_keymapper_lookup(animation->keymap, animation->mapping_lang, key_val);
 
     char *rgb_str = NULL;
     if (htable_fetch(frame, *key, (void **) &rgb_str) != HTABLE_SUCCESS)
@@ -168,17 +172,17 @@ bool keyboard_animation_play(
       rgb_color.b = (rgb_val >> 0)  & 0xFF;
     }
     else
-      dbgerr("Invalid color in animation-frame %lu: %s\n", curr_frame, rgb_str);
+      dbgerr("Invalid color in animation-frame %lu: %s\n", animation->curr_frame, rgb_str);
 
     // Try to set the key within the framebuffer
     scptr keyboard_key_color_t *key_color = keyboard_key_color_make(key_val, rgb_color);
-    if (dynarr_set_at(*framebuf, key_val, mman_ref(key_color)) != dynarr_SUCCESS)
+    if (dynarr_set_at(animation->framebuffer, key_val, mman_ref(key_color)) != dynarr_SUCCESS)
       kbanim_err("Could not set a key at slot %lu in the framebuffer!", key_val);
   }
 
   // Get current key array state
   scptr keyboard_key_color_t **key_arr = NULL;
-  size_t num_keys = dynarr_as_array(*framebuf, (void ***) &key_arr);
+  size_t num_keys = dynarr_as_array(animation->framebuffer, (void ***) &key_arr);
 
   // Make items frame
   scptr uint8_t *data_keys = keyboard_ctl_frame_make(TYPE_KEYS);
@@ -202,4 +206,53 @@ bool keyboard_animation_play(
 
   // Successfully applied frame
   return true;
+}
+
+static void *keyboard_animation_thread(void *arg)
+{
+  keyboard_animation_t *anim = (keyboard_animation_t *) arg;
+  anim->curr_frame = 1;
+  anim->looping = true;
+
+  // External buffers for animation playing
+  scptr char *err = NULL;
+
+  // Draw frames over and over again while in looping mode
+  while (anim->looping)
+  {
+    // Loop all frames and display them one by one
+    for (; anim->curr_frame <= anim->last_frame && anim->looping; anim->curr_frame++)
+    {
+      if (!keyboard_animation_dispatch_frame(anim, anim->device, &err))
+        dbgerr("ERROR: Could not play animation-frame %lu: %s\n", anim->curr_frame, err);
+      else
+        dbginf("Played animation frame %lu!\n", anim->curr_frame);
+
+      // Delay between frames
+      usleep(anim->frame_del * 1000);
+    }
+
+    // Reset frame index
+    anim->curr_frame = 1;
+  }
+}
+
+bool keyboard_animation_launch(
+  keyboard_animation_t *animation,
+  htable_t *keymap,
+  keyboard_t *kb
+)
+{
+  animation->keymap = keymap;
+  animation->device = kb;
+
+  int ret = pthread_create(&(animation->thread), NULL, keyboard_animation_thread, (void *) animation);
+  return ret == 0;
+}
+
+void keyboard_animation_quit(keyboard_animation_t *animation)
+{
+  // Disable looping state and join to truly wait until exiting
+  animation->looping = false;
+  pthread_join(animation->thread, NULL);
 }

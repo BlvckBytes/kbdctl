@@ -223,28 +223,11 @@ int process(void)
   // test_deactivate(kb, TARG_LOGO);
   // test_deactivate(kb, TARG_KEYS);
 
-  // External buffers for animation playing
-  scptr dynarr_t *anim_fb = NULL;
-  scptr char *err = NULL;
-  size_t curr_frame = 1;
-
-  // Draw frames multiple times in a row (for debugging purposes, later this will be an endless but stoppable loop)
-  for (size_t i = 0; i < 5; i++)
+  if (keyboard_animation_launch(anim, keymap, kb))
   {
-    // Loop al frames and display one by one
-    for (; curr_frame <= anim->last_frame; curr_frame++)
-    {
-      if (!keyboard_animation_play(anim, keymap, kb, curr_frame, &anim_fb, &err))
-        dbgerr("ERROR: Could not play animation-frame %lu: %s\n", curr_frame, err);
-      else
-        dbginf("Played animation frame %lu!\n", curr_frame);
-
-      // Delay between frames
-      usleep(anim->frame_del * 1000);
-    }
-
-    // Reset frame index
-    curr_frame = 1;
+    // Just tessting whether quitting works properly, comment this out for infinite animation
+    usleep(1000 * 1000 * 10);
+    keyboard_animation_quit(anim);
   }
 
   hid_exit();
