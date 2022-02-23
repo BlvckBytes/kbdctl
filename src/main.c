@@ -226,7 +226,7 @@ int process(void)
   if (keyboard_animation_launch(anim, keymap, kb))
   {
     // Just tessting whether quitting works properly, comment this out for infinite animation
-    usleep(1000 * 1000 * 10);
+    // usleep(1000 * 1000 * 10);
     keyboard_animation_quit(anim);
   }
 

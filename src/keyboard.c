@@ -12,6 +12,7 @@ static void keyboard_cleanup(mman_meta_t *meta)
   mman_dealloc(kb->product);
   mman_dealloc(kb->serial_str);
   mman_dealloc(kb->serial);
+  mman_dealloc(kb->path);
 }
 
 char *keyboard_dump(keyboard_t *kb)
@@ -51,6 +52,9 @@ keyboard_t *keyboard_from_hdi(struct hid_device_info *hdi)
   kb->serial_str = strconv(hdi->serial_number, 512);
   kb->product = strconv(hdi->product_string, 512);
 
+  // Duplicate C strings
+  kb->path = strclone(hdi->path, 512);
+
   return mman_ref(kb);
 }
 
@@ -64,11 +68,7 @@ bool keyboard_open(keyboard_t *kb, char **err)
   }
 
   // Open connection
-  kb->handle = hid_open(
-    kb->vendor_id,
-    kb->product_id,
-    kb->serial
-  );
+  kb->handle = hid_open_path(kb->path);
 
   // Could not open a connection
   if (!kb->handle)

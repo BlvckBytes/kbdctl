@@ -4,6 +4,7 @@
 #include <hidapi/hidapi.h>
 
 #include "util/strfmt.h"
+#include "util/strclone.h"
 #include "util/strconv.h"
 #include "util/compattrs.h"
 #include "util/mman.h"
@@ -21,6 +22,7 @@ typedef struct keyboard
   uint16_t vendor_id;             // USB Vendor ID
   uint16_t product_id;            // USB Product ID
   wchar_t *serial;                // Device serial
+  char *path;                     // System path for this device
 
   hid_device *handle;             // Device connection handle
 } keyboard_t;

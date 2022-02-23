@@ -19,12 +19,13 @@ char *keyboard_devman_list()
     // Append current device to buffer
     strfmt(
       &res, &res_offs,
-      "VID=0x%04X (" QUOTSTR "), PID=%04X (" QUOTSTR "), SER=" QUOTSTR "\n",
+      "VID=0x%04X (" QUOTSTR "), PID=%04X (" QUOTSTR "), SER=" QUOTSTR ", PATH=" QUOTSTR "\n",
       dev->vendor_id,
       STRFMT_EMPTYMARK(man_str),
       dev->product_id,
       STRFMT_EMPTYMARK(prod_str),
-      STRFMT_EMPTYMARK(ser_str)
+      STRFMT_EMPTYMARK(ser_str),
+      dev->path
     );
   }
 
@@ -46,15 +47,14 @@ keyboard_t *keyboard_devman_find(uint16_t vid, uint16_t pid, char *ser)
 
     // Skip devices that are not of interest
     if (
-      dev->vendor_id == vid
-      && dev->product_id == pid
-      && (!ser || strncmp(ser, ser_str, strlen(ser)) == 0)
+      dev->vendor_id == vid                                   // Matching vendor id
+      && dev->product_id == pid                               // Matching product id
+      && (!ser || strncmp(ser, ser_str, strlen(ser)) == 0)    // Matching serial or no serial provided
+      && dev->interface_number != 0                           // Not interface 0 (root, used for keypresses)
     )
     {
       // Convert and store
       kb = keyboard_from_hdi(dev);
-
-      // Take the first device for now
       break;
     }
   }
