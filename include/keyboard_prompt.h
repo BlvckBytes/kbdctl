@@ -5,6 +5,7 @@
 #include "util/partial_strdup.h"
 #include "util/enumlut.h"
 #include "util/longp.h"
+#include "util/htable.h"
 #include "keyboard_devman.h"
 #include "keyboard.h"
 #include "keyboard_ctl_frame_target.h"
@@ -12,14 +13,33 @@
 #include "keyboard_color.h"
 #include "keyboard_ctl_frame.h"
 
+/**
+ * @brief Represents the state of the prompter which gets manipulated by commands
+ */
 typedef struct keyboard_prompt_state
 {
   keyboard_t *kb;
+  htable_t *commands;
   bool prompting;
 } keyboard_prompt_state_t;
 
+/**
+ * @brief Represents an individual command handler
+ */
+typedef char *(*keyboard_prompt_command_t)(char *, keyboard_prompt_state_t *);
+
+/**
+ * @brief Process user input and modify the state accordingly
+ * 
+ * @param input User input to process
+ * @param state State of the prompt
+ * @return char* Response to the user
+ */
 char *keyboard_prompt_process(char *input, keyboard_prompt_state_t *state);
 
+/**
+ * @brief Create a new prompt-state with default values
+ */
 keyboard_prompt_state_t *keyboard_prompt_state_make();
 
 #endif

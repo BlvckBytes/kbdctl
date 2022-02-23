@@ -181,65 +181,69 @@ INLINED static char *keyboard_prompt_effect(char *args, keyboard_prompt_state_t 
   return keyboard_prompt_effect_gen_usage();
 }
 
+INLINED static char *keyboard_prompt_exit(char *args, keyboard_prompt_state_t *state)
+{
+  // Invoke unselect routine and dealloc it's result, as it's not needed
+  mman_dealloc(keyboard_prompt_unselect(NULL, state));
+
+  // Stop prompting and return
+  state->prompting = false;
+  return strfmt_direct("Quitting application!\n");
+}
+
 /*
 ============================================================================
                               Command Processor                             
 ============================================================================
 */
 
-// TODO: Implement some kind of LUT to also be able to print a help-screen
 char *keyboard_prompt_process(char *input, keyboard_prompt_state_t *state)
 {
   size_t input_offs = 0;
   scptr char *cmd = partial_strdup(input, &input_offs, " ", false);
   scptr char *args = partial_strdup(input, &input_offs, "\0", false);
 
-  // list
-  // List all available USB devices
-  if (strcasecmp(cmd, "list") == 0)
-    return keyboard_prompt_list(args, state);
-
-  // select <VID> <PID> [SER]
-  // Select a certain USB device
-  if (strcasecmp(cmd, "select") == 0)
-    return keyboard_prompt_select(args, state);
-
-  // unselect
-  if (strcasecmp(cmd, "unselect") == 0)
-    return keyboard_prompt_unselect(args, state);
-
-  // what
-  // Show what device is currently selected
-  if (strcasecmp(cmd, "what") == 0)
-    return keyboard_prompt_what(args, state);
-
-  // exit
-  // Exit the program
-  else if (strcasecmp(cmd, "exit") == 0)
+  keyboard_prompt_command_t pc;
+  if (htable_fetch(state->commands, cmd, (void **) &pc) != HTABLE_SUCCESS)
   {
-    // Invoke unselect routine and dealloc it's result, as it's not needed
-    mman_dealloc(keyboard_prompt_unselect(NULL, state));
+    scptr char **cmds = NULL;
+    htable_list_keys(state->commands, &cmds);
 
-    // Stop prompting and return
-    state->prompting = false;
-    return strfmt_direct("Quitting application!\n");
+    scptr char *buf = (char *) mman_alloc(sizeof(char), 128, NULL);
+    size_t buf_offs = 0;
+
+    // Add all available commands from the table
+    strfmt(&buf, &buf_offs, "Unknown, available commands:\n");
+    for (char **c = cmds; *c; c++)
+      strfmt(&buf, &buf_offs, "- %s\n", *c);
+
+    return mman_ref(buf);
   }
 
-  // effect list
-  // effect apply <effect> <target> <time in ms> [color as hex]
-  if (strcasecmp(cmd, "effect") == 0)
-    return keyboard_prompt_effect(args, state);
-
-  else
-    return strfmt_direct("Unknown command: " QUOTSTR "!\n", cmd);
+  return pc(args, state);
 }
 
 static void keyboard_prompt_state_cleanup(mman_meta_t *meta)
 {
-  keyboard_prompt_state_t *state = (keyboard_prompt_state_t *) meta;
+  keyboard_prompt_state_t *state = (keyboard_prompt_state_t *) meta->ptr;
 
-  // Deallocate the keyboard wrapper
+  // Deallocate the keyboard wrapper and the command table
   mman_dealloc(state->kb);
+  mman_dealloc(state->commands);
+}
+
+INLINED static htable_t *keyboard_prompt_build_command_table()
+{
+  scptr htable_t *cmds = htable_make(32, NULL);
+
+  htable_insert(cmds, "list", keyboard_prompt_list);
+  htable_insert(cmds, "select", keyboard_prompt_select);
+  htable_insert(cmds, "what", keyboard_prompt_what);
+  htable_insert(cmds, "unselect", keyboard_prompt_unselect);
+  htable_insert(cmds, "effect", keyboard_prompt_effect);
+  htable_insert(cmds, "exit", keyboard_prompt_exit);
+
+  return mman_ref(cmds);
 }
 
 keyboard_prompt_state_t *keyboard_prompt_state_make()
@@ -249,6 +253,9 @@ keyboard_prompt_state_t *keyboard_prompt_state_make()
   // Set defaults
   state->kb = NULL;
   state->prompting = true;
+
+  // Initialize command table
+  state->commands = keyboard_prompt_build_command_table();
 
   return mman_ref(state);
 }
