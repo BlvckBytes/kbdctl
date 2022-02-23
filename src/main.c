@@ -231,30 +231,12 @@ int process(void)
     return 1;
   }
 
-  /* Testcases - nice and manual! :) */
-
-  // test_apply_effect(kb, EFFECT_WAVE_CIRC_CENTER_IN, TARG_KEYS, 800, (keyboard_color_t) { 0x00, 0x00, 0x00 });
-  // test_apply_effect(kb, EFFECT_WAVE_CIRC_CENTER_OUT, TARG_KEYS, 800, (keyboard_color_t) { 0x00, 0x00, 0x00 });
-  // test_apply_effect(kb, EFFECT_WAVE_HORIZONTAL, TARG_KEYS, 800, (keyboard_color_t) { 0x00, 0x00, 0x00 });
-  // test_apply_effect(kb, EFFECT_WAVE_HORIZONTAL_REV, TARG_KEYS, 800, (keyboard_color_t) { 0x00, 0x00, 0x00 });
-  // test_apply_effect(kb, EFFECT_WAVE_VERTICAL, TARG_KEYS, 800, (keyboard_color_t) { 0x00, 0x00, 0x00 });
-  // test_apply_effect(kb, EFFECT_WAVE_VERTICAL_REV, TARG_KEYS, 800, (keyboard_color_t) { 0x00, 0x00, 0x00 });
-  // test_apply_effect(kb, EFFECT_BREATHING, TARG_KEYS, 5000, (keyboard_color_t) { 0xFF, 0x00, 0x00 });
-  // test_apply_effect(kb, EFFECT_CYCLE, TARG_KEYS, 8000, (keyboard_color_t) { 0x00, 0x00, 0x00 });
-  // test_apply_effect(kb, EFFECT_BREATHING, TARG_KEYS, 800, (keyboard_color_t) { 0x00, 0x00, 0xFF });
-  // test_apply_effect(kb, EFFECT_BREATHING, TARG_LOGO, 1000, (keyboard_color_t) { 0x00, 0x00, 0xFF });
-  // test_apply_status_color(kb, (keyboard_color_t) { 0xFF, 0x00, 0x00 });
-  // test_boot_mode(kb, BOOT_FACTORY);
-  // test_loop_keys(kb, (keyboard_color_t) { 0xFF, 0x00, 0x00 }, 300, false);
-  // test_deactivate(kb, TARG_LOGO);
-  // test_deactivate(kb, TARG_KEYS);
-
-  if (keyboard_animation_launch(anim, keymap, kb))
-  {
-    // Just tessting whether quitting works properly, comment this out for infinite animation
-    // usleep(1000 * 1000 * 10);
-    keyboard_animation_quit(anim);
-  }
+  // if (keyboard_animation_launch(anim, keymap, kb))
+  // {
+  //   // Just tessting whether quitting works properly, comment this out for infinite animation
+  //   // usleep(1000 * 1000 * 10);
+  //   keyboard_animation_quit(anim);
+  // }
 
   hid_exit();
   return 0;

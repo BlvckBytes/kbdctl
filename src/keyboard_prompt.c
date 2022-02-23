@@ -236,6 +236,12 @@ INLINED static htable_t *keyboard_prompt_build_command_table()
 {
   scptr htable_t *cmds = htable_make(32, NULL);
 
+  // TODO: Statuscolor
+  // TODO: Bootmode
+  // TODO: Deactivate
+  // TODO: Set key color individually
+  // TODO: Run animations
+
   htable_insert(cmds, "list", keyboard_prompt_list);
   htable_insert(cmds, "select", keyboard_prompt_select);
   htable_insert(cmds, "what", keyboard_prompt_what);
