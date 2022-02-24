@@ -21,13 +21,13 @@ I bought a Logitech G Pro TKL RGB keyboard a few weeks ago, and now I'm sick and
 - [X] Add custom keymap functionality using lookup table files
 - [X] Create custom animations using key-array frames
 - [X] Create a prompt-loop for full control
+- [ ] Add argc/argv parser for folder location and server port
 - [ ] Turn this into a daemon using web-sockets to dispatch commands
 - [ ] Add the ability to store settings on profiles
 - [ ] Just maybe... add a GUI?
 
 ### Documentation
 
-- [ ] Write a small doc of C-API usage-examples
 - [ ] Write about keyboard mapping
 - [ ] Write about animations
 
