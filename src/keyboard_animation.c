@@ -19,7 +19,7 @@ static void keyboard_animation_cleanup(mman_meta_t *meta)
 keyboard_animation_t *keyboard_animation_load(const char *floc, char **err)
 {
   // Try to parse the ini file
-  scptr htable_t *ini = iniparse(floc, err, 512, 256);
+  scptr htable_t *ini = iniparse_read(floc, err, 512, 256);
   if (!ini) return NULL;
 
   // Create animation wrapper

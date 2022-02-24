@@ -1,12 +1,12 @@
 #include "util/iniparse.h"
 
-#define iniparse_err(fmt, ...)                 \
+#define iniparse_readerr(fmt, ...)                 \
   {                                            \
     *err = strfmt_direct(fmt, ##__VA_ARGS__);  \
     return NULL;                               \
   }
 
-htable_t *iniparse(const char *floc, char **err, size_t max_secs, size_t max_keys_per_sec)
+htable_t *iniparse_read(const char *floc, char **err, size_t max_secs, size_t max_keys_per_sec)
 {
   // Allocate outer section table
   scptr htable_t *secs = htable_make(max_secs, mman_dealloc_nr);
@@ -16,7 +16,7 @@ htable_t *iniparse(const char *floc, char **err, size_t max_secs, size_t max_key
 
   // Could not open the file
   if (!f)
-    iniparse_err("Could not open the file " QUOTSTR " (" QUOTSTR ")!", floc, strerror(errno));
+    iniparse_readerr("Could not open the file " QUOTSTR " (" QUOTSTR ")!", floc, strerror(errno));
 
   // Reading utility buffers
   size_t read_len, buf_len, line_ind = 0;
@@ -51,7 +51,7 @@ htable_t *iniparse(const char *floc, char **err, size_t max_secs, size_t max_key
 
       // Invalid section begin occurred
       if (sec == NULL)
-        iniparse_err("Invalid section-begin occurred in line %lu!", line_ind);
+        iniparse_readerr("Invalid section-begin occurred in line %lu!", line_ind);
 
       // This section's name is already known
       if (htable_contains(secs, sec))
@@ -71,7 +71,7 @@ htable_t *iniparse(const char *floc, char **err, size_t max_secs, size_t max_key
 
     // Not in a section but already at a key
     if (!curr_sec)
-      iniparse_err("Found keys before section-start in line %lu!", line_ind);
+      iniparse_readerr("Found keys before section-start in line %lu!", line_ind);
 
     // Split on =
     size_t kv_offs = 0;

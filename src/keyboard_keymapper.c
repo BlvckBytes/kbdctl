@@ -2,7 +2,7 @@
 
 htable_t *keyboard_keymapper_load(const char *floc, char **err)
 {
-  scptr htable_t *res = iniparse(floc, err, 32, 256);
+  scptr htable_t *res = iniparse_read(floc, err, 32, 256);
 
   if (!res) return NULL;
   return mman_ref(res);
