@@ -18,7 +18,7 @@ INLINED static void dynarr_cleanup(mman_meta_t *ref)
   mman_dealloc(dynarr->items);
 }
 
-dynarr_t *dynarr_make(size_t array_size, size_t array_max_size, cleanup_fn_t cf)
+dynarr_t *dynarr_make(size_t array_size, size_t array_max_size, clfn_t cf)
 {
   scptr dynarr_t *res = mman_alloc(sizeof(dynarr_t), 1, dynarr_cleanup);
 

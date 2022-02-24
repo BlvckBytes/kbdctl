@@ -4,7 +4,7 @@
 /**
  * @brief Cleanup function used on removal of data
  */
-typedef void (*cleanup_fn_t)(void *);
+typedef void (*clfn_t)(void *);
 
 /**
  * @brief Stringify a given input used for logging

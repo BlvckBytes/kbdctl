@@ -3,7 +3,7 @@
 /**
  * @brief Clean up an individual slot
  */
-static void htable_slot_cleanup(htable_entry_t *slot, cleanup_fn_t cf)
+static void htable_slot_cleanup(htable_entry_t *slot, clfn_t cf)
 {
   // Call the item free function, if applicable
   if (cf && slot->value) cf(slot->value);
@@ -39,7 +39,7 @@ static void htable_cleanup(mman_meta_t *ref)
   mman_dealloc(table->slots);
 }
 
-htable_t *htable_make(size_t item_cap, cleanup_fn_t cf)
+htable_t *htable_make(size_t item_cap, clfn_t cf)
 {
   scptr htable_t *table = (htable_t *) mman_alloc(sizeof(htable_t), 1, htable_cleanup);
   

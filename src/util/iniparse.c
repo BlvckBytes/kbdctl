@@ -1,9 +1,15 @@
 #include "util/iniparse.h"
 
-#define iniparse_readerr(fmt, ...)                 \
+#define iniparse_readerr(fmt, ...)             \
   {                                            \
     *err = strfmt_direct(fmt, ##__VA_ARGS__);  \
     return NULL;                               \
+  }
+
+#define iniparse_writeerr(fmt, ...)            \
+  {                                            \
+    *err = strfmt_direct(fmt, ##__VA_ARGS__);  \
+    return false;                              \
   }
 
 htable_t *iniparse_read(const char *floc, char **err, size_t max_secs, size_t max_keys_per_sec)
@@ -12,30 +18,30 @@ htable_t *iniparse_read(const char *floc, char **err, size_t max_secs, size_t ma
   scptr htable_t *secs = htable_make(max_secs, mman_dealloc_nr);
 
   // Open keymap file
-  FILE *f = fopen(floc, "r");
+  scptr FILE **f = (FILE **) mman_wrap(fopen(floc, "r"), (clfn_t) fclose);
 
   // Could not open the file
-  if (!f)
+  if (!*f)
     iniparse_readerr("Could not open the file " QUOTSTR " (" QUOTSTR ")!", floc, strerror(errno));
 
   // Reading utility buffers
   size_t read_len, buf_len, line_ind = 0;
-  char *line = NULL;
+  scptr char **line = (char **) mman_wrap(NULL, free);
 
   // Section currently in
   // This will change over time as the file is scanned from top to bottom
   htable_t *curr_sec = NULL;
 
   // Read this file line by line
-  while ((read_len = getline(&line, &buf_len, f)) != -1) {
+  while ((read_len = getline(line, &buf_len, *f)) != -1) {
     line_ind++;
 
     // Comment-only line
-    if (line[0] == ';') continue;
+    if ((*line)[0] == ';') continue;
 
     // Strip this line of a trailing comment, if applicable
-    long line_commind = strind(line, ";", 0);
-    scptr char *line_nocomm = substr(line, 0, line_commind > 0 ? line_commind - 1 : line_commind);
+    long line_commind = strind(*line, ";", 0);
+    scptr char *line_nocomm = substr(*line, 0, line_commind > 0 ? line_commind - 1 : line_commind);
 
     // Trim the comment-stripped line to make the final sanitized line
     scptr char *san_line = strtrim(line_nocomm);
@@ -82,11 +88,6 @@ htable_t *iniparse_read(const char *floc, char **err, size_t max_secs, size_t ma
     htable_insert(curr_sec, key, mman_ref(value));
   }
 
-  // Free linebuffer alloced by getline, if applicable
-  // Also close the file handle
-  if (line) free(line);
-  fclose(f);
-
   return mman_ref(secs);
 }
 
@@ -114,6 +115,18 @@ static char *iniparse_stringify_kv(void *item)
   }
 
   return mman_ref(res);
+}
+
+bool iniparse_write(htable_t *ini, const char *floc, char **err)
+{
+  // Open output file
+  scptr FILE **f = (FILE **) mman_wrap(fopen(floc, "w"), (clfn_t) fclose);
+
+  // Could not open the file
+  if (!f)
+    iniparse_writeerr("Could not open the file " QUOTSTR " (" QUOTSTR ")!", floc, strerror(errno));
+
+  return false;
 }
 
 char *iniparse_dump(htable_t *keymap)

@@ -31,6 +31,18 @@
 htable_t *iniparse_read(const char *floc, char **err, size_t max_secs, size_t max_keys_per_sec);
 
 /**
+ * @brief Write a ini from memory into a file
+ * 
+ * @param ini Ini in memory
+ * @param floc File location
+ * @param err Error string output buffer, NULL if not needed
+ * 
+ * @return true File written successfully
+ * @return false Could not write the file
+ */
+bool iniparse_write(htable_t *ini, const char *floc, char **err);
+
+/**
  * @brief Dump a parsed keymap
  * 
  * @param keymap Keymap to dump

@@ -24,7 +24,7 @@ typedef struct
   size_t _array_cap;
 
   // Cleanup function for the array items
-  cleanup_fn_t _cf;
+  clfn_t _cf;
 } dynarr_t;
 
 typedef enum
@@ -50,7 +50,7 @@ typedef enum
  * @param cf Cleanup function for the items
  * @return dynarr_t* Pointer to the new array
  */
-dynarr_t *dynarr_make(size_t array_size, size_t array_max_size, cleanup_fn_t cf);
+dynarr_t *dynarr_make(size_t array_size, size_t array_max_size, clfn_t cf);
 
 /**
  * @brief Push a new item into the array

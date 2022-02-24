@@ -76,7 +76,7 @@ typedef struct
   size_t _item_cap;
 
   // Cleanup function for the table items
-  cleanup_fn_t _cf;
+  clfn_t _cf;
 } htable_t;
 
 /**
@@ -86,7 +86,7 @@ typedef struct
  * @param cf Cleanup function for the items
  * @return htable_t* Pointer to the new table
  */
-htable_t *htable_make(size_t item_cap, cleanup_fn_t cf);
+htable_t *htable_make(size_t item_cap, clfn_t cf);
 
 /**
  * @brief Insert a new item into the table

@@ -10,6 +10,7 @@
 #include "util/compattrs.h"
 #include "util/atomanip.h"
 #include "util/dbglog.h"
+#include "util/common_types.h"
 
 /*
 ============================================================================
@@ -48,8 +49,13 @@ typedef struct mman_meta
   // Number of blocks with block_size
   size_t num_blocks;
 
-  // Cleanup function invoked before the resource gets free'd
+  // Cleanup function invoked before the whole malloc gets free'd
+  // INFO: This is used in conjunction with mman_alloc resources
   mman_cleanup_f_t cf;
+
+  // Cleanup function invoked before the whole malloc gets free'd
+  // INFO: This is used in conjunction with mman_wrap resources
+  clfn_t cf_wrapped;
 
   // Number of active references pointing at this resource
   volatile size_t refs;
@@ -93,6 +99,15 @@ mman_meta_t *mman_fetch_meta(void *ptr);
  * @return void* Pointer to the resource, NULL if no space left
  */
 void *mman_alloc(size_t block_size, size_t num_blocks, mman_cleanup_f_t cf);
+
+/**
+ * @brief Wrap an existing pointer to also be managed in an mman-style
+ * 
+ * @param ptr Pointer to be wrapped
+ * @param cf Cleanup function for that pointer
+ * @return void** Pointer to the managed pointer
+ */
+void **mman_wrap(void *ptr, clfn_t cf);
 
 /**
  * @brief Allocate zero-initialized memory and get a managed reference to it

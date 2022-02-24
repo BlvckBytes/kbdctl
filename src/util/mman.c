@@ -40,7 +40,13 @@ mman_meta_t *mman_fetch_meta(void *ptr)
  * @param cf Cleanup function
  * @return mman_meta_t Pointer to the meta-info
  */
-INLINED static mman_meta_t *mman_create(size_t block_size, size_t num_blocks, bool zero_init, mman_cleanup_f_t cf)
+INLINED static mman_meta_t *mman_create(
+  size_t block_size,
+  size_t num_blocks,
+  bool zero_init,
+  mman_cleanup_f_t cf,
+  clfn_t cf_wrapped
+)
 {
   mman_meta_t *meta = (mman_meta_t *) malloc(
     sizeof(mman_meta_t) // Meta information
@@ -52,6 +58,7 @@ INLINED static mman_meta_t *mman_create(size_t block_size, size_t num_blocks, bo
     .block_size = block_size,
     .num_blocks = num_blocks,
     .cf = cf,
+    .cf_wrapped = cf_wrapped,
     .refs = 1
   };
 
@@ -67,7 +74,22 @@ void *mman_alloc(size_t block_size, size_t num_blocks, mman_cleanup_f_t cf)
   atomic_increment(&mman_alloc_count);
 
   // Create new meta-info and return a pointer to the data block
-  return mman_create(block_size, num_blocks, false, cf)->ptr;
+  return mman_create(block_size, num_blocks, false, cf, NULL)->ptr;
+}
+
+void **mman_wrap(void *ptr, clfn_t cf)
+{
+  // INFO: Increment the allocation count for debugging purposes
+  atomic_increment(&mman_alloc_count);
+
+  // Create new meta-info and return a pointer to the data block
+  // The data-block is a pointer to the pointer that's being wrapped
+  // It will point to the passed-in ptr
+  mman_meta_t *meta = mman_create(sizeof(void *), 1, false, NULL, cf);
+  void **refptr = (void **) meta->ptr;
+  *refptr = ptr;
+
+  return refptr;
 }
 
 void *mman_calloc(size_t block_size, size_t num_blocks, mman_cleanup_f_t cf)
@@ -76,7 +98,7 @@ void *mman_calloc(size_t block_size, size_t num_blocks, mman_cleanup_f_t cf)
   atomic_increment(&mman_alloc_count);
 
   // Create new meta-info and return a pointer to the data block
-  return mman_create(block_size, num_blocks, true, cf)->ptr;
+  return mman_create(block_size, num_blocks, true, cf, NULL)->ptr;
 }
 
 mman_meta_t *mman_realloc(void **ptr_ptr, size_t block_size, size_t num_blocks)
@@ -123,8 +145,13 @@ mman_result_t mman_dealloc_force(void *ptr)
     return MMAN_INVREF;
   }
 
-  // Call additional cleanup function, if applicable
+  // Call additional cleanup function on the meta-block
   if (meta->cf) meta->cf(meta);
+
+  // Call additional cleanup function on the wrapped pointer
+  // This means derefing the pointer to the pointer that's to be passed to cf_wrapped
+  else if(meta->cf_wrapped)
+    meta->cf_wrapped(*((void **) ptr));
 
   // Free the whole allocated (meta- + data-) blocks by the head-ptr
   free(meta);

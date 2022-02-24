@@ -28,20 +28,16 @@ int process(int argc, char **argv)
 
   while (kbs->prompting)
   {
-    char *line = NULL;
+    scptr char **line = (char **) mman_wrap(NULL, free);
     size_t line_len = 0;
 
     // Try to read a line from STDIN
-    if (getline(&line, &line_len, stdin) <= 0)
-    {
-      free(line);
+    if (getline(line, &line_len, stdin) <= 0)
       continue;
-    }
 
     // Process this request
-    scptr char *req = strtrim(line);
+    scptr char *req = strtrim(*line);
     scptr char *answ = keyboard_prompt_process(req, kbs);
-    free(line);
 
     // Print response
     printf("%s", answ);
