@@ -15,9 +15,6 @@
 #include "keyboard_color.h"
 #include "keyboard_ctl_frame.h"
 
-// TODO: Don't use hardcoded paths
-#define KEYMAP_FLOC_BASEPATH "/Users/blvckbytes/.config/kbdctl/animations"
-
 /**
  * @brief Represents the state of the prompter which gets manipulated by commands
  */
@@ -32,6 +29,7 @@ typedef struct keyboard_prompt_state
   keyboard_animation_t *curr_anim;          // Currently playing animation
 
   bool prompting;                           // Prompting loop state
+  char *kbdctl_dir;                         // Directory path of the kbdctl folder
 } keyboard_prompt_state_t;
 
 /**
@@ -52,7 +50,8 @@ char *keyboard_prompt_process(char *input, keyboard_prompt_state_t *state);
  * @brief Create a new prompt-state with default values
  * 
  * @param keymap_floc File location of the keymap ini
+ * @param err Error output buffer, can be NULL
  */
-keyboard_prompt_state_t *keyboard_prompt_state_make(const char *keymap_floc);
+keyboard_prompt_state_t *keyboard_prompt_state_make(const char *keymap_floc, char **err);
 
 #endif

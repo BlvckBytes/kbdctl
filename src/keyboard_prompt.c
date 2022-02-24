@@ -588,7 +588,7 @@ INLINED static char *keyboard_prompt_animation(char *cmd, char *args, keyboard_p
 
   // Parse animation from file
   scptr char *anim_err = NULL;
-  scptr char *anim_path = strfmt_direct(KEYMAP_FLOC_BASEPATH "/%s.ini", name);
+  scptr char *anim_path = strfmt_direct("%s/animations/%s.ini", state->kbdctl_dir, name);
   scptr keyboard_animation_t *anim = keyboard_animation_load(anim_path, &anim_err);
   if (!anim)
     return strfmt_direct("Could not parse the animation at " QUOTSTR ": %s\n", anim_path, anim_err);
@@ -777,9 +777,10 @@ static void keyboard_prompt_state_cleanup(mman_meta_t *meta)
   mman_dealloc(state->mappings);
   mman_dealloc(state->usages);
   mman_dealloc(state->curr_anim);
+  mman_dealloc(state->kbdctl_dir);
 }
 
-keyboard_prompt_state_t *keyboard_prompt_state_make(const char *keymap_floc)
+keyboard_prompt_state_t *keyboard_prompt_state_make(const char *kbdctl_dir, char **err)
 {
   scptr keyboard_prompt_state_t *state = mman_alloc(sizeof(keyboard_prompt_state_t), 1, keyboard_prompt_state_cleanup);
 
@@ -787,19 +788,26 @@ keyboard_prompt_state_t *keyboard_prompt_state_make(const char *keymap_floc)
   state->kb = NULL;
   state->prompting = true;
   state->curr_anim = NULL;
+  state->mappings = NULL;
+  state->commands = NULL;
+
+  // Set kbdctl base-path
+  state->kbdctl_dir = strfmt_direct("%s", kbdctl_dir);
 
   // Initialize command table
   keyboard_prompt_build_command_table(state);
 
   // Initialize mappings table
   scptr char *keymap_err = NULL;
+  scptr char *keymap_floc = strfmt_direct("%s/keymap.ini", kbdctl_dir);
   scptr htable_t *keymap = keyboard_keymapper_load(keymap_floc, &keymap_err);
   if (!keymap)
   {
-    dbgerr("ERROR: Could not parse the keymap at " QUOTSTR ": %s\n", keymap_floc, keymap_err);
+    if (err)
+      *err = strfmt_direct("ERROR: Could not parse the keymap at " QUOTSTR ": %s\n", keymap_floc, keymap_err);
     return NULL;
   }
-  state->mappings = mman_ref(keymap);
 
+  state->mappings = mman_ref(keymap);
   return mman_ref(state);
 }
