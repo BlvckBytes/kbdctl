@@ -6,6 +6,48 @@
 ============================================================================
 */
 
+INLINED static char *keyboard_prompt_parse_key_color(char *key, char *color, keyboard_key_color_t **out)
+{
+  // Parse the key
+  keyboard_key_t k;
+  if (keyboard_key_value(key, &k) != ENUMLUT_SUCCESS)
+    return strfmt_direct("Invalid key: " QUOTSTR "\n", key);
+
+  // Parse key color
+  keyboard_color_t kcol = { 0x00, 0x00, 0x00 };
+  long color_l;
+  if (longp(&color_l, color, 16) != LONGP_SUCCESS)
+    return strfmt_direct("Invalid color hexadecimal number: %s\n", color);
+  keyboard_color_apply_number(&kcol, color_l);
+
+  // Create key color and write to output buffer
+  scptr keyboard_key_color_t *k_color = keyboard_key_color_make(k, kcol);
+  *out = mman_ref(k_color);
+
+  // No error occurred
+  return NULL;
+}
+
+INLINED static char *keyboard_prompt_generate_keylist()
+{
+  scptr char *buf = (char *) mman_alloc(sizeof(char), 128, NULL);
+  size_t buf_offs = 0;
+  
+  strfmt(&buf, &buf_offs, "Available keys:\n");
+
+  // Fill in available keys from enum
+  size_t len = keyboard_key_length();
+  for (size_t i = 0; i < len; i++)
+  {
+    keyboard_key_t tar;
+    if (keyboard_key_by_index(i, &tar) == ENUMLUT_SUCCESS)
+      strfmt(&buf, &buf_offs, "- %s\n", keyboard_key_name(tar));
+  }
+
+  strfmt(&buf, &buf_offs, "\n");
+  return mman_ref(buf);
+}
+
 INLINED static void keyboard_prompt_write_targets(char **buf, size_t *buf_offs)
 {
   // Fill in available targets from enum
@@ -391,63 +433,42 @@ INLINED static char *keyboard_prompt_key(char *args, keyboard_prompt_state_t *st
 
   size_t args_offs = 0;
   scptr char *action = partial_strdup(args, &args_offs, " ", false);
-  scptr char *key = partial_strdup(args, &args_offs, " ", false);
-  scptr char *color = partial_strdup(args, &args_offs, " ", false);
-  scptr char *keymap_lang = partial_strdup(args, &args_offs, " ", false);
 
   if (!action)
     return keyboard_prompt_key_gen_usage();
 
   if (strcasecmp(action, "list") == 0)
-  {
-    scptr char *buf = (char *) mman_alloc(sizeof(char), 128, NULL);
-    size_t buf_offs = 0;
-    
-    strfmt(&buf, &buf_offs, "Available keys:\n");
-
-    // Fill in available keys from enum
-    size_t len = keyboard_key_length();
-    for (size_t i = 0; i < len; i++)
-    {
-      keyboard_key_t tar;
-      if (keyboard_key_by_index(i, &tar) == ENUMLUT_SUCCESS)
-        strfmt(&buf, &buf_offs, "- %s\n", keyboard_key_name(tar));
-    }
-
-    strfmt(&buf, &buf_offs, "\n");
-    return mman_ref(buf);
-  }
+    return keyboard_prompt_generate_keylist();
 
   if (strcasecmp(action, "apply") == 0)
   {
+    scptr char *key = partial_strdup(args, &args_offs, " ", false);
+    scptr char *color = partial_strdup(args, &args_offs, " ", false);
+
+    // No key color left in the arguments buffer
     if (!key || !color)
       return keyboard_prompt_key_gen_usage();
 
-    // Parse the key
-    keyboard_key_t k;
-    if (keyboard_key_value(key, &k) != ENUMLUT_SUCCESS)
-      return strfmt_direct("Invalid key: " QUOTSTR "\n", key);
+    // Parse key and key color
+    scptr keyboard_key_color_t *k_color = NULL;
+    scptr char *parse_err = keyboard_prompt_parse_key_color(key, color, &k_color);
 
-    // Parse key color
-    keyboard_color_t kcol = { 0x00, 0x00, 0x00 };
-    long color_l;
-    if (longp(&color_l, color, 16) != LONGP_SUCCESS)
-      return strfmt_direct("Invalid color hexadecimal number: %s\n", color);
-    keyboard_color_apply_number(&kcol, color_l);
+    // Error during parsing
+    if (parse_err)
+      return mman_ref(parse_err);
 
     // Map key if applicable
+    scptr char *keymap_lang = partial_strdup(args, &args_offs, " ", false);
     if (keymap_lang)
-      k = keyboard_keymapper_lookup(state->mappings, keymap_lang, k);
+      k_color->key = keyboard_keymapper_lookup(state->mappings, keymap_lang, k_color->key);
 
     // Kill any existing animation
     keyboard_prompt_kill_animation(state);
 
     // Make parameterized items frame
-    size_t keys_offs = 0, num_keys = 1;
-    scptr keyboard_key_color_t *k_color = keyboard_key_color_make(k, kcol);
-    keyboard_key_color_t *key_arr[] = { k_color };
+    size_t keys_offs = 0;
     scptr uint8_t *data_keys = keyboard_ctl_frame_make(TYPE_KEYS);
-    keyboard_ctl_frame_key_list_apply(data_keys, key_arr, num_keys, KGA_KEY, &keys_offs);
+    keyboard_ctl_frame_key_list_apply(data_keys, &k_color, 1, KGA_KEY, &keys_offs);
 
     // Transmit frame
     if (!keyboard_transmit(state->kb, data_keys, mman_fetch_meta(data_keys)->num_blocks))
@@ -462,6 +483,92 @@ INLINED static char *keyboard_prompt_key(char *args, keyboard_prompt_state_t *st
   }
 
   return keyboard_prompt_key_gen_usage();
+}
+
+/*
+============================================================================
+                                Command "KEYS"                              
+============================================================================
+*/
+
+INLINED static char *keyboard_prompt_keys_gen_usage()
+{
+  return strfmt_direct("Usage: keys <list/apply> <keymap-lang> (<key> <color>)+\n");
+}
+
+INLINED static char *keyboard_prompt_keys(char *args, keyboard_prompt_state_t *state)
+{
+  if (!state->kb)
+    return strfmt_direct("No device selected!\n");
+
+  size_t args_offs = 0;
+  scptr char *action = partial_strdup(args, &args_offs, " ", false);
+
+  if (!action)
+    return keyboard_prompt_keys_gen_usage();
+
+  if (strcasecmp(action, "list") == 0)
+    return keyboard_prompt_generate_keylist();
+
+  if (strcasecmp(action, "apply") == 0)
+  {
+    // Get the desired keymap language
+    scptr char *keymap_lang = partial_strdup(args, &args_offs, " ", false);
+    if (!keymap_lang)
+      return keyboard_prompt_keys_gen_usage();
+
+    scptr dynarr_t *keys = dynarr_make(32, keyboard_key_length(), mman_dealloc_nr);
+
+    // Loop as long as keys are available
+    while (true)
+    {
+      scptr char *key = partial_strdup(args, &args_offs, " ", false);
+      scptr char *color = partial_strdup(args, &args_offs, " ", false);
+      if (!key || !color) break;
+
+      // Parse key and key color
+      scptr keyboard_key_color_t *k_color = NULL;
+      scptr char *parse_err = keyboard_prompt_parse_key_color(key, color, &k_color);
+
+      // Error during parsing
+      if (parse_err)
+        return mman_ref(parse_err);
+
+      // Map key if applicable
+      if (keymap_lang)
+        k_color->key = keyboard_keymapper_lookup(state->mappings, keymap_lang, k_color->key);
+
+      // Insert key to list and quit if the array is full
+      if (dynarr_push(keys, mman_ref(k_color), NULL) != dynarr_SUCCESS)
+        break;
+    }
+
+    // Get all key-color entries
+    scptr keyboard_key_color_t **key_arr = NULL;
+    size_t num_keys = dynarr_as_array(keys, (void ***) &key_arr);
+
+    // Make items frame
+    scptr uint8_t *data_keys = keyboard_ctl_frame_make(TYPE_KEYS);
+
+    // Append all keys and send, may take multiple frames as one frame has limited capacity
+    size_t keys_offs = 0;
+    while (num_keys != keys_offs)
+    {
+      keyboard_ctl_frame_key_list_apply(data_keys, key_arr, num_keys, KGA_KEY, &keys_offs);
+      if (!keyboard_transmit(state->kb, data_keys, mman_fetch_meta(data_keys)->num_blocks))
+        return strfmt_direct("Could not transmit data to the device!\n");
+      usleep(1000 * 10);
+    }
+
+    // Commit changes and thus make them visible
+    scptr uint8_t *data_comm = keyboard_ctl_frame_make(TYPE_COMMIT);
+    if (!keyboard_transmit(state->kb, data_comm, mman_fetch_meta(data_comm)->num_blocks))
+      return strfmt_direct("Could not transmit data to the device!\n");
+
+    return strfmt_direct("Applied %lu key-colors!\n", num_keys);
+  }
+
+  return keyboard_prompt_keys_gen_usage();
 }
 
 /*
@@ -536,7 +643,7 @@ char *keyboard_prompt_process(char *input, keyboard_prompt_state_t *state)
   scptr char *args = partial_strdup(input, &input_offs, "\0", false);
 
   keyboard_prompt_command_t pc;
-  if (htable_fetch(state->commands, cmd, (void **) &pc) != HTABLE_SUCCESS)
+  if (!cmd || htable_fetch(state->commands, cmd, (void **) &pc) != HTABLE_SUCCESS)
   {
     scptr char **cmds = NULL;
     htable_list_keys(state->commands, &cmds);
@@ -575,6 +682,7 @@ INLINED static htable_t *keyboard_prompt_build_command_table()
   htable_insert(cmds, "statuscolor", keyboard_prompt_statuscolor);
   htable_insert(cmds, "animation", keyboard_prompt_animation);
   htable_insert(cmds, "key", keyboard_prompt_key);
+  htable_insert(cmds, "keys", keyboard_prompt_keys);
   htable_insert(cmds, "exit", keyboard_prompt_exit);
 
   return mman_ref(cmds);

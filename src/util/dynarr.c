@@ -176,7 +176,7 @@ size_t dynarr_as_array(dynarr_t *arr, void ***out)
   if (active_slots == 0) return 0;
 
   // Create array
-  scptr void **res = (void **) mman_alloc(sizeof(void *), active_slots, NULL);
+  scptr void **res = (void **) mman_alloc(sizeof(void *), active_slots + 1, NULL);
 
   // Copy over pointers
   size_t res_index = 0;
@@ -185,6 +185,9 @@ size_t dynarr_as_array(dynarr_t *arr, void ***out)
     void *item = arr->items[i];
     if (item) res[res_index++] = item;
   }
+
+  // Null-terminate array
+  res[res_index] = NULL;
 
   *out = mman_ref(res);
   return active_slots;
