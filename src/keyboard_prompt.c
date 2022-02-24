@@ -6,6 +6,14 @@
 ============================================================================
 */
 
+INLINED static char *keyboard_prompt_generate_usage(keyboard_prompt_state_t *state, char *cmd)
+{
+  char *usage = NULL;
+  if (htable_fetch(state->usages, cmd, (void **) &usage) == HTABLE_SUCCESS)
+    return strfmt_direct("%s", usage);
+ return strfmt_direct("Could not find a usage for " QUOTSTR "!\n", cmd);
+}
+
 INLINED static char *keyboard_prompt_parse_key_color(char *key, char *color, keyboard_key_color_t **out)
 {
   // Parse the key
@@ -89,7 +97,7 @@ INLINED static void keyboard_prompt_kill_animation(keyboard_prompt_state_t *stat
 ============================================================================
 */
 
-INLINED static char *keyboard_prompt_list(char *args, keyboard_prompt_state_t *state)
+INLINED static char *keyboard_prompt_list(char *cmd, char *args, keyboard_prompt_state_t *state)
 {
   return keyboard_devman_list();
 }
@@ -100,7 +108,7 @@ INLINED static char *keyboard_prompt_list(char *args, keyboard_prompt_state_t *s
 ============================================================================
 */
 
-INLINED static char *keyboard_prompt_select(char *args, keyboard_prompt_state_t *state)
+INLINED static char *keyboard_prompt_select(char *cmd, char *args, keyboard_prompt_state_t *state)
 {
   // Check that no selections are present already
   if (state->kb)
@@ -112,7 +120,7 @@ INLINED static char *keyboard_prompt_select(char *args, keyboard_prompt_state_t 
   scptr char *ser = partial_strdup(args, &args_offs, " ", false);
 
   if (!vid | !pid)
-    return strfmt_direct("Usage: select <VID> <PID> [SER]\n");
+    return keyboard_prompt_generate_usage(state, cmd);
 
   // Parse vendor id number
   long vid_l;
@@ -145,7 +153,7 @@ INLINED static char *keyboard_prompt_select(char *args, keyboard_prompt_state_t 
 ============================================================================
 */
 
-INLINED static char *keyboard_prompt_unselect(char *args, keyboard_prompt_state_t *state)
+INLINED static char *keyboard_prompt_unselect(char *cmd, char *args, keyboard_prompt_state_t *state)
 {
   if (!state->kb)
     return strfmt_direct("No device selected!\n");
@@ -164,7 +172,7 @@ INLINED static char *keyboard_prompt_unselect(char *args, keyboard_prompt_state_
 ============================================================================
 */
 
-INLINED static char *keyboard_prompt_what(char *args, keyboard_prompt_state_t *state)
+INLINED static char *keyboard_prompt_what(char *cmd, char *args, keyboard_prompt_state_t *state)
 {
   if (!state->kb)
     return strfmt_direct("No device selected!\n");
@@ -190,11 +198,11 @@ INLINED static char *keyboard_prompt_effect_gen_usage()
   size_t buf_offs = 0;
   strfmt(&buf, &buf_offs, "Usage: effect <list/apply> <effect> [<");
   keyboard_prompt_write_targets(&buf, &buf_offs);
-  strfmt(&buf, &buf_offs, "> <time in ms> [color as hex]]\n");
+  strfmt(&buf, &buf_offs, "> <time in ms> [color as hex]]");
   return mman_ref(buf);
 }
 
-INLINED static char *keyboard_prompt_effect(char *args, keyboard_prompt_state_t *state)
+INLINED static char *keyboard_prompt_effect(char *cmd, char *args, keyboard_prompt_state_t *state)
 {
   if (!state->kb)
     return strfmt_direct("No device selected!\n");
@@ -208,7 +216,7 @@ INLINED static char *keyboard_prompt_effect(char *args, keyboard_prompt_state_t 
   scptr char *store = partial_strdup(args, &args_offs, " ", false);
 
   if (!action)
-    return keyboard_prompt_effect_gen_usage();
+    return keyboard_prompt_generate_usage(state, cmd);
 
   // List all available effects
   if (strcasecmp(action, "list") == 0)
@@ -236,7 +244,7 @@ INLINED static char *keyboard_prompt_effect(char *args, keyboard_prompt_state_t 
   {
     // Allow for null-colors and null-store-bools
     if (!effect || !target || !time)
-      return keyboard_prompt_effect_gen_usage();
+      return keyboard_prompt_generate_usage(state, cmd);
 
     // Parse effect from string
     keyboard_effect_t eff;
@@ -282,7 +290,7 @@ INLINED static char *keyboard_prompt_effect(char *args, keyboard_prompt_state_t 
     return strfmt_direct("Applied effect!\n");
   }
 
-  return keyboard_prompt_effect_gen_usage();
+  return keyboard_prompt_generate_usage(state, cmd);
 }
 
 /*
@@ -297,11 +305,11 @@ INLINED static char *keyboard_prompt_bootmode_gen_usage()
   size_t buf_offs = 0;
   strfmt(&buf, &buf_offs, "Usage: bootmode <");
   keyboard_prompt_write_bootmode(&buf, &buf_offs);
-  strfmt(&buf, &buf_offs, ">\n");
+  strfmt(&buf, &buf_offs, ">");
   return mman_ref(buf);
 }
 
-INLINED static char *keyboard_prompt_bootmode(char *args, keyboard_prompt_state_t *state)
+INLINED static char *keyboard_prompt_bootmode(char *cmd, char *args, keyboard_prompt_state_t *state)
 {
   if (!state->kb)
     return strfmt_direct("No device selected!\n");
@@ -310,7 +318,7 @@ INLINED static char *keyboard_prompt_bootmode(char *args, keyboard_prompt_state_
   scptr char *bootmode = partial_strdup(args, &args_offs, " ", false);
 
   if (!bootmode)
-    return keyboard_prompt_bootmode_gen_usage();
+    return keyboard_prompt_generate_usage(state, cmd);
 
   // Parse bootmode from string
   keyboard_boot_mode_t mode;
@@ -338,11 +346,11 @@ INLINED static char *keyboard_prompt_deactivate_gen_usage()
   size_t buf_offs = 0;
   strfmt(&buf, &buf_offs, "Usage: deactivate <");
   keyboard_prompt_write_targets(&buf, &buf_offs);
-  strfmt(&buf, &buf_offs, ">\n");
+  strfmt(&buf, &buf_offs, ">");
   return mman_ref(buf);
 }
 
-INLINED static char *keyboard_prompt_deactivate(char *args, keyboard_prompt_state_t *state)
+INLINED static char *keyboard_prompt_deactivate(char *cmd, char *args, keyboard_prompt_state_t *state)
 {
   if (!state->kb)
     return strfmt_direct("No device selected!\n");
@@ -351,7 +359,7 @@ INLINED static char *keyboard_prompt_deactivate(char *args, keyboard_prompt_stat
   scptr char *target = partial_strdup(args, &args_offs, " ", false);
 
   if (!target)
-    return keyboard_prompt_deactivate_gen_usage();
+    return keyboard_prompt_generate_usage(state, cmd);
 
   // Parse target from string
   keyboard_ctl_frame_target_t targ;
@@ -377,7 +385,7 @@ INLINED static char *keyboard_prompt_deactivate(char *args, keyboard_prompt_stat
 ============================================================================
 */
 
-INLINED static char *keyboard_prompt_statuscolor(char *args, keyboard_prompt_state_t *state)
+INLINED static char *keyboard_prompt_statuscolor(char *cmd, char *args, keyboard_prompt_state_t *state)
 {
   if (!state->kb)
     return strfmt_direct("No device selected!\n");
@@ -386,7 +394,7 @@ INLINED static char *keyboard_prompt_statuscolor(char *args, keyboard_prompt_sta
   scptr char *color = partial_strdup(args, &args_offs, " ", false);
 
   if (!color)
-    return strfmt_direct("Usage: statuscolor <color as hex>\n");
+    return keyboard_prompt_generate_usage(state, cmd);
 
   // Parse status color
   keyboard_color_t kcol = { 0x00, 0x00, 0x00 };
@@ -421,12 +429,7 @@ INLINED static char *keyboard_prompt_statuscolor(char *args, keyboard_prompt_sta
 ============================================================================
 */
 
-INLINED static char *keyboard_prompt_key_gen_usage()
-{
-  return strfmt_direct("Usage: key <list/apply> <key> <color> [keymap-lang]\n");
-}
-
-INLINED static char *keyboard_prompt_key(char *args, keyboard_prompt_state_t *state)
+INLINED static char *keyboard_prompt_key(char *cmd, char *args, keyboard_prompt_state_t *state)
 {
   if (!state->kb)
     return strfmt_direct("No device selected!\n");
@@ -435,7 +438,7 @@ INLINED static char *keyboard_prompt_key(char *args, keyboard_prompt_state_t *st
   scptr char *action = partial_strdup(args, &args_offs, " ", false);
 
   if (!action)
-    return keyboard_prompt_key_gen_usage();
+    return keyboard_prompt_generate_usage(state, cmd);
 
   if (strcasecmp(action, "list") == 0)
     return keyboard_prompt_generate_keylist();
@@ -447,7 +450,7 @@ INLINED static char *keyboard_prompt_key(char *args, keyboard_prompt_state_t *st
 
     // No key color left in the arguments buffer
     if (!key || !color)
-      return keyboard_prompt_key_gen_usage();
+      return keyboard_prompt_generate_usage(state, cmd);
 
     // Parse key and key color
     scptr keyboard_key_color_t *k_color = NULL;
@@ -482,7 +485,7 @@ INLINED static char *keyboard_prompt_key(char *args, keyboard_prompt_state_t *st
     return strfmt_direct("Applied color %s to key %s!\n", color, key);
   }
 
-  return keyboard_prompt_key_gen_usage();
+  return keyboard_prompt_generate_usage(state, cmd);
 }
 
 /*
@@ -491,12 +494,7 @@ INLINED static char *keyboard_prompt_key(char *args, keyboard_prompt_state_t *st
 ============================================================================
 */
 
-INLINED static char *keyboard_prompt_keys_gen_usage()
-{
-  return strfmt_direct("Usage: keys <list/apply> <keymap-lang> (<key> <color>)+\n");
-}
-
-INLINED static char *keyboard_prompt_keys(char *args, keyboard_prompt_state_t *state)
+INLINED static char *keyboard_prompt_keys(char *cmd, char *args, keyboard_prompt_state_t *state)
 {
   if (!state->kb)
     return strfmt_direct("No device selected!\n");
@@ -505,7 +503,7 @@ INLINED static char *keyboard_prompt_keys(char *args, keyboard_prompt_state_t *s
   scptr char *action = partial_strdup(args, &args_offs, " ", false);
 
   if (!action)
-    return keyboard_prompt_keys_gen_usage();
+    return keyboard_prompt_generate_usage(state, cmd);
 
   if (strcasecmp(action, "list") == 0)
     return keyboard_prompt_generate_keylist();
@@ -515,7 +513,7 @@ INLINED static char *keyboard_prompt_keys(char *args, keyboard_prompt_state_t *s
     // Get the desired keymap language
     scptr char *keymap_lang = partial_strdup(args, &args_offs, " ", false);
     if (!keymap_lang)
-      return keyboard_prompt_keys_gen_usage();
+      return keyboard_prompt_generate_usage(state, cmd);
 
     scptr dynarr_t *keys = dynarr_make(32, keyboard_key_length(), mman_dealloc_nr);
 
@@ -568,7 +566,7 @@ INLINED static char *keyboard_prompt_keys(char *args, keyboard_prompt_state_t *s
     return strfmt_direct("Applied %lu key-colors!\n", num_keys);
   }
 
-  return keyboard_prompt_keys_gen_usage();
+  return keyboard_prompt_generate_usage(state, cmd);
 }
 
 /*
@@ -577,12 +575,7 @@ INLINED static char *keyboard_prompt_keys(char *args, keyboard_prompt_state_t *s
 ============================================================================
 */
 
-INLINED static char *keyboard_prompt_animation_gen_usage()
-{
-  return strfmt_direct("Usage: animation <name>\n");
-}
-
-INLINED static char *keyboard_prompt_animation(char *args, keyboard_prompt_state_t *state)
+INLINED static char *keyboard_prompt_animation(char *cmd, char *args, keyboard_prompt_state_t *state)
 {
   if (!state->kb)
     return strfmt_direct("No device selected!\n");
@@ -591,7 +584,7 @@ INLINED static char *keyboard_prompt_animation(char *args, keyboard_prompt_state
   scptr char *name = partial_strdup(args, &args_offs, " ", false);
 
   if (!name)
-    return keyboard_prompt_animation_gen_usage();
+    return keyboard_prompt_generate_usage(state, cmd);
 
   // Parse animation from file
   scptr char *anim_err = NULL;
@@ -617,13 +610,13 @@ INLINED static char *keyboard_prompt_animation(char *args, keyboard_prompt_state
 ============================================================================
 */
 
-INLINED static char *keyboard_prompt_exit(char *args, keyboard_prompt_state_t *state)
+INLINED static char *keyboard_prompt_exit(char *cmd, char *args, keyboard_prompt_state_t *state)
 {
   // Kill any existing animation
   keyboard_prompt_kill_animation(state);
 
   // Invoke unselect routine and dealloc it's result, as it's not needed
-  mman_dealloc(keyboard_prompt_unselect(NULL, state));
+  mman_dealloc(keyboard_prompt_unselect(NULL, NULL, state));
 
   // Stop prompting and return
   state->prompting = false;
@@ -646,20 +639,24 @@ char *keyboard_prompt_process(char *input, keyboard_prompt_state_t *state)
   if (!cmd || htable_fetch(state->commands, cmd, (void **) &pc) != HTABLE_SUCCESS)
   {
     scptr char **cmds = NULL;
-    htable_list_keys(state->commands, &cmds);
+    size_t nkeys = htable_list_keys(state->commands, &cmds);
 
     scptr char *buf = (char *) mman_alloc(sizeof(char), 128, NULL);
     size_t buf_offs = 0;
 
     // Add all available commands from the table
-    strfmt(&buf, &buf_offs, "Unknown, available commands:\n");
+    strfmt(&buf, &buf_offs, "=======================< Helpscreen >=======================\n");
     for (char **c = cmds; *c; c++)
+    {
+      scptr char *c_usage = keyboard_prompt_generate_usage(state, *c);
       strfmt(&buf, &buf_offs, "- %s\n", *c);
-
+      strfmt(&buf, &buf_offs, "%s%s", c_usage, (c - cmds != nkeys - 1) ? "\n" : "");
+    }
+    strfmt(&buf, &buf_offs, "=======================< Helpscreen >=======================\n");
     return mman_ref(buf);
   }
 
-  return pc(args, state);
+  return pc(cmd, args, state);
 }
 
 /*
@@ -668,24 +665,100 @@ char *keyboard_prompt_process(char *input, keyboard_prompt_state_t *state)
 ============================================================================
 */
 
-INLINED static htable_t *keyboard_prompt_build_command_table()
+INLINED static void keyboard_prompt_build_command_table(keyboard_prompt_state_t *state)
 {
   scptr htable_t *cmds = htable_make(32, NULL);
+  scptr htable_t *usages = htable_make(32, mman_dealloc_nr);
 
   htable_insert(cmds, "list", keyboard_prompt_list);
-  htable_insert(cmds, "select", keyboard_prompt_select);
-  htable_insert(cmds, "what", keyboard_prompt_what);
-  htable_insert(cmds, "unselect", keyboard_prompt_unselect);
-  htable_insert(cmds, "effect", keyboard_prompt_effect);
-  htable_insert(cmds, "deactivate", keyboard_prompt_deactivate);
-  htable_insert(cmds, "bootmode", keyboard_prompt_bootmode);
-  htable_insert(cmds, "statuscolor", keyboard_prompt_statuscolor);
-  htable_insert(cmds, "animation", keyboard_prompt_animation);
-  htable_insert(cmds, "key", keyboard_prompt_key);
-  htable_insert(cmds, "keys", keyboard_prompt_keys);
-  htable_insert(cmds, "exit", keyboard_prompt_exit);
+  htable_insert(usages, "list", strfmt_direct(
+    "%s\n%s\n",
+    "Usage: list",
+    "List all available USB devices"
+  ));
 
-  return mman_ref(cmds);
+  htable_insert(cmds, "select", keyboard_prompt_select);
+  htable_insert(usages, "select", strfmt_direct(
+    "%s\n%s\n",
+    "Usage: select <VID> <PID> [SER]",
+    "Select a USB device by it's vendor- and productid and an optional serial"
+  ));
+
+  htable_insert(cmds, "what", keyboard_prompt_what);
+  htable_insert(usages, "what", strfmt_direct(
+    "%s\n%s\n",
+    "Usage: what",
+    "Check what device is currently selected"
+  ));
+
+  htable_insert(cmds, "unselect", keyboard_prompt_unselect);
+  htable_insert(usages, "unselect", strfmt_direct(
+    "%s\n%s\n",
+    "Usage: unselect",
+    "Unselect and thus close the currently selected device"
+  ));
+
+  htable_insert(cmds, "effect", keyboard_prompt_effect);
+  scptr char *effect_usage = keyboard_prompt_effect_gen_usage();
+  htable_insert(usages, "effect", strfmt_direct(
+    "%s\n%s\n",
+    effect_usage,
+    "Apply a built-in, parameterized effect to the keyboard"
+  ));
+
+  htable_insert(cmds, "deactivate", keyboard_prompt_deactivate);
+  scptr char *deactivate_usage = keyboard_prompt_deactivate_gen_usage();
+  htable_insert(usages, "deactivate", strfmt_direct(
+    "%s\n%s\n",
+    deactivate_usage,
+    "Deactivate a group of keys by turning them off"
+  ));
+
+  htable_insert(cmds, "bootmode", keyboard_prompt_bootmode);
+  scptr char *bootmode_usage = keyboard_prompt_bootmode_gen_usage();
+  htable_insert(usages, "bootmode", strfmt_direct(
+    "%s\n%s\n",
+    bootmode_usage,
+    "Set the mode the keyboard boots into"
+  ));
+
+  htable_insert(cmds, "statuscolor", keyboard_prompt_statuscolor);
+  htable_insert(usages, "statuscolor", strfmt_direct(
+    "%s\n%s\n",
+    "Usage: statuscolor <color as hex>",
+    "Set the color of status-keys"
+  ));
+
+  htable_insert(cmds, "animation", keyboard_prompt_animation);
+  htable_insert(usages, "animation", strfmt_direct(
+    "%s\n%s\n",
+    "Usage: animation <name>",
+    "Launch an animation by it's .ini-file name"
+  ));
+
+  htable_insert(cmds, "key", keyboard_prompt_key);
+  htable_insert(usages, "key", strfmt_direct(
+    "%s\n%s\n",
+    "Usage: key <list/apply> <key> <color> [keymap-lang]",
+    "Set an individual key's color"
+  ));
+
+  htable_insert(cmds, "keys", keyboard_prompt_keys);
+  htable_insert(usages, "keys", strfmt_direct(
+    "%s\n%s\n",
+    "Usage: keys <list/apply> <keymap-lang> (<key> <color>)+",
+    "Set multiple key colors at once"
+  ));
+
+  htable_insert(cmds, "exit", keyboard_prompt_exit);
+  htable_insert(usages, "exit", strfmt_direct(
+    "%s\n%s\n",
+    "Usage: exit"
+    "Exit the program and thus close any open devices"
+  ));
+
+  state->commands = mman_ref(cmds);
+  state->usages = mman_ref(usages);
 }
 
 /*
@@ -702,6 +775,7 @@ static void keyboard_prompt_state_cleanup(mman_meta_t *meta)
   mman_dealloc(state->kb);
   mman_dealloc(state->commands);
   mman_dealloc(state->mappings);
+  mman_dealloc(state->usages);
   mman_dealloc(state->curr_anim);
 }
 
@@ -715,7 +789,7 @@ keyboard_prompt_state_t *keyboard_prompt_state_make(const char *keymap_floc)
   state->curr_anim = NULL;
 
   // Initialize command table
-  state->commands = keyboard_prompt_build_command_table();
+  keyboard_prompt_build_command_table(state);
 
   // Initialize mappings table
   scptr char *keymap_err = NULL;

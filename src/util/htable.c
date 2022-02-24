@@ -242,7 +242,7 @@ htable_result_t htable_append_table(htable_t *dest, htable_t *src, htable_append
   return HTABLE_SUCCESS;
 }
 
-void htable_list_keys(htable_t *table, char ***output)
+size_t htable_list_keys(htable_t *table, char ***output)
 {
   *output = (char **) mman_alloc(sizeof(char *), table->_item_count + 1, NULL);
 
@@ -260,6 +260,7 @@ void htable_list_keys(htable_t *table, char ***output)
 
   // Terminate list
   (*output)[output_index] = 0;
+  return table->_item_count;
 }
 
 char *htable_dump_hr_strs(htable_t *table)

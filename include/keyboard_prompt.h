@@ -23,17 +23,21 @@
  */
 typedef struct keyboard_prompt_state
 {
-  keyboard_t *kb;
-  htable_t *commands;
-  htable_t *mappings;
-  keyboard_animation_t *curr_anim;
-  bool prompting;
+  keyboard_t *kb;                           // Targetted keyboard
+  htable_t *mappings;                       // Mappings applied on the keys
+
+  htable_t *commands;                       // Command table
+  htable_t *usages;                         // Usage table, mapping usages to commands
+
+  keyboard_animation_t *curr_anim;          // Currently playing animation
+
+  bool prompting;                           // Prompting loop state
 } keyboard_prompt_state_t;
 
 /**
  * @brief Represents an individual command handler
  */
-typedef char *(*keyboard_prompt_command_t)(char *, keyboard_prompt_state_t *);
+typedef char *(*keyboard_prompt_command_t)(char *, char *, keyboard_prompt_state_t *);
 
 /**
  * @brief Process user input and modify the state accordingly

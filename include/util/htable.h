@@ -146,8 +146,10 @@ htable_result_t htable_append_table(htable_t *dest, htable_t *src, htable_append
  * 
  * @param table Table reference
  * @param output String array pointer buffer
+ * 
+ * @returns Number of keys returned
  */
-void htable_list_keys(htable_t *table, char ***output);
+size_t htable_list_keys(htable_t *table, char ***output);
 
 /**
  * @brief Dumps the current state of the table in a human readable format
