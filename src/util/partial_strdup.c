@@ -1,6 +1,6 @@
 #include "util/partial_strdup.h"
 
-bool is_substr_loc(char *str, const char *search, size_t offs)
+bool is_substr_loc(const char *str, const char *search, size_t offs)
 {
   // When searching for the string end, wait until end is reached
   if (search[0] == 0) return str[offs] == 0;
@@ -13,7 +13,7 @@ bool is_substr_loc(char *str, const char *search, size_t offs)
   return true;
 }
 
-char *partial_strdup(char *str, size_t *offs, const char* sep, bool skip)
+char *partial_strdup(const char *str, size_t *offs, const char* sep, bool skip)
 {
   // No input provided
   if (!str) return NULL;

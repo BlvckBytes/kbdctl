@@ -20,7 +20,7 @@
  * 
  * @return char* Duplicated partial string
  */
-char *partial_strdup(char *str, size_t *offs, const char* sep, bool skip);
+char *partial_strdup(const char *str, size_t *offs, const char* sep, bool skip);
 
 /**
  * @brief Check whether or not the char sequence in question starts at
@@ -33,6 +33,6 @@ char *partial_strdup(char *str, size_t *offs, const char* sep, bool skip);
  * @return true Search begins here
  * @return false Search doesn't begin here
  */
-bool is_substr_loc(char *str, const char *search, size_t offs);
+bool is_substr_loc(const char *str, const char *search, size_t offs);
 
 #endif

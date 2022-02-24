@@ -123,10 +123,39 @@ bool iniparse_write(htable_t *ini, const char *floc, char **err)
   scptr FILE **f = (FILE **) mman_wrap(fopen(floc, "w"), (clfn_t) fclose);
 
   // Could not open the file
-  if (!f)
+  if (!*f)
     iniparse_writeerr("Could not open the file " QUOTSTR " (" QUOTSTR ")!", floc, strerror(errno));
 
-  return false;
+  // Loop all section titles
+  scptr char **sections = NULL;
+  htable_list_keys(ini, &sections);
+  for (char **section = sections; *section; section++)
+  {
+    // Get section
+    scptr htable_t *sectable = NULL;
+    htable_fetch(ini, *section, (void **) &sectable);
+
+    // Write section header, put a leading newline on !first line
+    scptr char *secthead = strfmt_direct("%s[%s]\n", section == sections ? "" : "\n", *section);
+    fputs(secthead, *f);
+
+    // Loop all keys of that section
+    scptr char **keys = NULL;
+    htable_list_keys(sectable, &keys);
+    for (char **key = keys; *key; key++)
+    {
+      // Get value to this key
+      char *value = NULL;
+      htable_fetch(sectable, *key, (void **) &value);
+
+      // Write key-value pair
+      scptr char *line = strfmt_direct("%s=%s\n", *key, value);
+      fputs(line, *f);
+    }
+  }
+
+  // Success
+  return true;
 }
 
 char *iniparse_dump(htable_t *keymap)
