@@ -23,11 +23,10 @@ I bought a Logitech G Pro TKL RGB keyboard a few weeks ago, and now I'm sick and
 - [X] Create a prompt-loop for full control
 - [X] Add argc/argv parser for folder location and server port
 - [ ] Turn this into a daemon using web-sockets to dispatch commands
-- [ ] Add the ability to store settings on profiles
-- [ ] Just maybe... add a GUI?
 
 ### Documentation
 
+- [ ] Write about the prompt and it's socket
 - [ ] Write about keyboard mapping
 - [ ] Write about animations
 
