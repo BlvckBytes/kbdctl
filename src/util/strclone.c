@@ -1,6 +1,6 @@
 #include "util/strclone.h"
 
-char *strclone(const char *origin, size_t max_len)
+char *strclone_s(const char *origin, size_t max_len)
 {
   // Validate that string length is within constraints
   size_t len = strlen(origin);
@@ -13,4 +13,9 @@ char *strclone(const char *origin, size_t max_len)
   clone[len] = 0;
 
   return mman_ref(clone);
+}
+
+char *strclone(const char *origin)
+{
+  return strfmt_direct("%s", origin);
 }

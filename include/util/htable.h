@@ -23,6 +23,8 @@
 
 #define HTABLE_ITEMS_PER_SLOT 6
 
+typedef void *(*htable_value_clone_f)(void *);
+
 /**
  * @brief Used when a table is appended into another table
  */
@@ -137,9 +139,10 @@ htable_result_t htable_fetch(htable_t *table, const char *key, void **output);
  * @param dest Destination to append to
  * @param src Source to append from
  * @param mode Mode of appending
+ * @param cf Clone function used to copy over values
  * @return htable_result_t Operation result
  */
-htable_result_t htable_append_table(htable_t *dest, htable_t *src, htable_append_mode_t mode);
+htable_result_t htable_append_table(htable_t *dest, htable_t *src, htable_append_mode_t mode, htable_value_clone_f cf);
 
 /**
  * @brief Get a list of all existing keys inside the table

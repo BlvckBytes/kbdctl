@@ -2,6 +2,8 @@
 #define keyboard_color_h
 
 #include <inttypes.h>
+#include "util/mman.h"
+#include "util/strfmt.h"
 
 /**
  * @brief 24 bit LED color
@@ -20,5 +22,13 @@ typedef struct keyboard_color
  * @param number Number to apply
  */
 void keyboard_color_apply_number(keyboard_color_t *color, long number);
+
+/**
+ * @brief Convert a keyboard color to it's hex-repr, without the leading #
+ * 
+ * @param color Color to convert
+ * @return char* Hex repr
+ */
+char *keyboard_color_to_hex(keyboard_color_t *color);
 
 #endif

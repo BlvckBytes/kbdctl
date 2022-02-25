@@ -53,7 +53,7 @@ keyboard_t *keyboard_from_hdi(struct hid_device_info *hdi)
   kb->product = strconv(hdi->product_string, 512);
 
   // Duplicate C strings
-  kb->path = strclone(hdi->path, 512);
+  kb->path = strclone(hdi->path);
 
   return mman_ref(kb);
 }

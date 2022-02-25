@@ -87,7 +87,7 @@ htable_result_t htable_insert(htable_t *table, const char *key, void *elem)
   if (!elem) return HTABLE_NULL_VALUE;
 
   // Try to clone the key using a max-length
-  scptr char *slot_key = strclone(key, HTABLE_MAX_KEYLEN);
+  scptr char *slot_key = strclone_s(key, HTABLE_MAX_KEYLEN);
   if (!slot_key) return HTABLE_KEY_TOO_LONG;
 
   // Find the target slot and create a new entry
@@ -194,7 +194,7 @@ htable_result_t htable_fetch(htable_t *table, const char *key, void **output)
   return HTABLE_KEY_NOT_FOUND;
 }
 
-htable_result_t htable_append_table(htable_t *dest, htable_t *src, htable_append_mode_t mode)
+htable_result_t htable_append_table(htable_t *dest, htable_t *src, htable_append_mode_t mode, htable_value_clone_f cf)
 {
   // Get all keys from the source
   scptr char **keys = NULL;
@@ -215,7 +215,7 @@ htable_result_t htable_append_table(htable_t *dest, htable_t *src, htable_append
   for (char **key = keys; *key; key++)
   {
     // Fetch this key's value
-    char *value;
+    void *value;
     if (htable_fetch(src, *key, (void *) &value) != HTABLE_SUCCESS)
       return HTABLE_KEY_NOT_FOUND;
 
@@ -235,7 +235,7 @@ htable_result_t htable_append_table(htable_t *dest, htable_t *src, htable_append
     }
 
     // Insert new value
-    if ((insertion_result = htable_insert(dest, *key, value)) != HTABLE_SUCCESS)
+    if ((insertion_result = htable_insert(dest, *key, cf(value))) != HTABLE_SUCCESS)
       return insertion_result;
   }
 

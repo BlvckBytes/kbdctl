@@ -5,6 +5,7 @@
 #include "util/partial_strdup.h"
 #include "util/enumlut.h"
 #include "util/longp.h"
+#include "util/strclone.h"
 #include "util/htable.h"
 #include "keyboard_devman.h"
 #include "keyboard.h"
