@@ -30,7 +30,6 @@ INLINED static char *keyboard_profile_build_path(const char *dir, const char *na
 INLINED static htable_t *keyboard_profile_effect_to_table(const char *key_pref, keyboard_profile_effect_t eff)
 {
   scptr htable_t *res = htable_make(3, mman_dealloc_nr);
-
   const char *effect_name = keyboard_effect_name(eff.effect);
 
   scptr char *name_k = strfmt_direct("%sname", key_pref);
@@ -107,9 +106,8 @@ keyboard_profile_t *keyboard_profile_make()
 bool keyboard_profile_save(const char *dir, const char *name, keyboard_profile_t *profile, char **err)
 {
   scptr char *path = keyboard_profile_build_path(dir, name);
-  scptr FILE **f = (FILE **) mman_wrap(fopen(path, "w"), (clfn_t) fclose);
-  fputs("to be implemented", *f);
-  return false;
+  scptr htable_t *contents = keyboard_profile_to_ini(profile);
+  return iniparse_write(contents, path, err);
 }
 
 keyboard_profile_t *keyboard_profile_load(const char *dir, const char *name, char **err)
@@ -123,18 +121,20 @@ htable_t *keyboard_profile_to_ini(keyboard_profile_t *profile)
 
   // Key lighting
   scptr htable_t *key_lighting = htable_make(keyboard_key_length() + 1, mman_dealloc_nr);
-  htable_insert(ini, "key_lighting", key_lighting);
+  htable_insert(ini, "key_lighting", mman_ref(key_lighting));
 
-  const char *key_lighting_type = keyboard_profile_key_lighting_type_name(profile->key_lighting_type);
+  // Key lighting type
+  scptr char *key_lighting_type_n = strclone(keyboard_profile_key_lighting_type_name(profile->key_lighting_type));
+  htable_insert(key_lighting, "key_lighting_type", mman_ref(key_lighting_type_n));
+
   keyboard_profile_key_lighting_t klt = profile->key_lighting;
-
-  htable_insert(key_lighting, "key_lighting_type", strclone(key_lighting_type));
   switch(profile->key_lighting_type)
   {
   // Write animation name
   case KBPKLT_ANIM:
   {
-    htable_insert(key_lighting, "animation_name", strclone(klt.animation_name));
+    if (klt.animation_name)
+      htable_insert(key_lighting, "animation_name", mman_ref(klt.animation_name));
     break;
   }
 
@@ -142,7 +142,7 @@ htable_t *keyboard_profile_to_ini(keyboard_profile_t *profile)
   case KBPKLT_EFFECT:
   {
     scptr htable_t *efft = keyboard_profile_effect_to_table("effect_", klt.effect_keys);
-    htable_append_table(key_lighting, efft, HTABLE_AM_OVERRIDE, (htable_value_clone_f) strclone);
+    htable_append_table(key_lighting, efft, HTABLE_AM_OVERRIDE, mman_ref);
     break;
   }
 
@@ -158,27 +158,33 @@ htable_t *keyboard_profile_to_ini(keyboard_profile_t *profile)
       if (htable_fetch(klt.custom_keys, *ckey, (void **) &ckey_col) != HTABLE_SUCCESS)
         continue;
 
-      htable_insert(key_lighting, *ckey, keyboard_color_to_hex(ckey_col));
+      scptr char *key_color_hex = keyboard_color_to_hex(ckey_col);
+      htable_insert(key_lighting, *ckey, mman_ref(key_color_hex));
     }
     break;
   }
   }
 
   // Logo effect
-  scptr htable_t *logo_effect = htable_make(16, mman_dealloc_nr);
-  htable_insert(ini, "logo_effect", logo_effect);
   scptr htable_t *logo_efft = keyboard_profile_effect_to_table("", profile->effect_logo);
-  htable_append_table(logo_effect, logo_efft, HTABLE_AM_OVERRIDE, (htable_value_clone_f) strclone);
+  htable_insert(ini, "logo_effect", mman_ref(logo_efft));
 
   // Configuration (one-value fields)
   scptr htable_t *config = htable_make(1, mman_dealloc_nr);
-  htable_insert(ini, "config", config);
-  htable_insert(config, "boot_mode", (void *) keyboard_boot_mode_name(profile->boot_mode));
-  htable_insert(config, "status_color", keyboard_color_to_hex(&(profile->status_color)));
 
+  // Boot mode
+  scptr char *boot_mode = strclone(keyboard_boot_mode_name(profile->boot_mode));
+  htable_insert_sm(config, "boot_mode", mman_ref(boot_mode));
+
+  // Status color
+  scptr char *status_color = keyboard_color_to_hex(&(profile->status_color));
+  htable_insert_sm(config, "status_color", mman_ref(status_color));
+
+  // Keymap language
   if (profile->keymap_lang)
-    htable_insert(config, "keymap_lang", strclone(profile->keymap_lang));
+    htable_insert_sm(config, "keymap_lang", mman_ref(profile->keymap_lang));
 
+  htable_insert(ini, "config", mman_ref(config));
   return mman_ref(ini);
 }
 

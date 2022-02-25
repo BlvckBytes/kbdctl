@@ -4,6 +4,7 @@
 #include "util/htable.h"
 #include "util/enumlut.h"
 #include "util/strclone.h"
+#include "util/iniparse.h"
 #include "keyboard_boot_mode.h"
 #include "keyboard_color.h"
 #include "keyboard_key.h"

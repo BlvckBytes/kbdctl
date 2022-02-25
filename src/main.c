@@ -2,8 +2,23 @@
 #include "util/mman.h"
 #include "keyboard_prompt.h"
 
+#include "keyboard_profile.h"
+
 int process(int argc, char **argv)
 {
+  // Manual testing regarding the keyboard profile persitence
+  // scptr keyboard_profile_t *prof = keyboard_profile_make();
+  // scptr char *profs_err = NULL;
+
+  // if (!keyboard_profile_save("/Users/blvckbytes/Desktop", "example_prof", prof, &profs_err))
+  // {
+  //   fprintf(stderr, "%s\n", profs_err);
+  //   return 1;
+  // }
+
+  // printf("Done!\n");
+  // return 0;
+
   if (argc < 2)
   {
     fprintf(stderr, "Usage: %s <kbdctl folder absolute path> [socket port]\n", argv[0]);

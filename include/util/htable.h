@@ -102,6 +102,18 @@ htable_t *htable_make(size_t item_cap, clfn_t cf);
 htable_result_t htable_insert(htable_t *table, const char *key, void *elem);
 
 /**
+ * @brief Insert a new item into the table safely in the way that mman_dealloc will
+ * be called on the elem if a non-success return-code occurs
+ * 
+ * @param table Table reference
+ * @param key Key to connect with the value
+ * @param elem Pointer to the value
+ * 
+ * @return htable_result_t Result of this operation
+ */
+htable_result_t htable_insert_sm(htable_t *table, const char *key, void *elem);
+
+/**
  * @brief Check if the table already contains this key
  * 
  * @param table Table reference

@@ -42,9 +42,12 @@ static void htable_cleanup(mman_meta_t *ref)
 htable_t *htable_make(size_t item_cap, clfn_t cf)
 {
   scptr htable_t *table = (htable_t *) mman_alloc(sizeof(htable_t), 1, htable_cleanup);
-  
+
+  // Calculate number of slots, constrain to have at least two
+  size_t slots = u64_max((uint64_t) (item_cap / HTABLE_ITEMS_PER_SLOT), 2);
+
   table->_item_count = 0; // No freeing
-  table->_slot_count = item_cap / HTABLE_ITEMS_PER_SLOT; // No freeing
+  table->_slot_count = slots; // No freeing
   table->_item_cap = item_cap; // No freeing
   table->_cf = cf; // No freeing
 
@@ -76,6 +79,19 @@ INLINED static size_t htable_hash(const char *key, size_t slot_count)
   }
 
   return hash % slot_count;
+}
+
+htable_result_t htable_insert_sm(htable_t *table, const char *key, void *elem)
+{
+  htable_result_t res = htable_insert(table, key, elem);
+
+  // Success, don'T call cf
+  if (res == HTABLE_SUCCESS)
+    return res;
+
+  // Error case, call cf
+  mman_dealloc(elem);
+  return res;
 }
 
 htable_result_t htable_insert(htable_t *table, const char *key, void *elem)

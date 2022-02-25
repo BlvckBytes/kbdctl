@@ -10,7 +10,7 @@ INLINED static char *keyboard_prompt_generate_usage(keyboard_prompt_state_t *sta
 {
   char *usage = NULL;
   if (htable_fetch(state->usages, cmd, (void **) &usage) == HTABLE_SUCCESS)
-    return strclone(usage);
+    return mman_ref(usage);
  return strfmt_direct("Could not find a usage for " QUOTSTR "!\n", cmd);
 }
 

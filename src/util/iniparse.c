@@ -132,7 +132,7 @@ bool iniparse_write(htable_t *ini, const char *floc, char **err)
   for (char **section = sections; *section; section++)
   {
     // Get section
-    scptr htable_t *sectable = NULL;
+    htable_t *sectable = NULL;
     htable_fetch(ini, *section, (void **) &sectable);
 
     // Write section header, put a leading newline on !first line
