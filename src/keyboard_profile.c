@@ -131,37 +131,37 @@ htable_t *keyboard_profile_to_ini(keyboard_profile_t *profile)
   htable_insert(key_lighting, "key_lighting_type", strclone(key_lighting_type));
   switch(profile->key_lighting_type)
   {
-    // Write animation name
-    case KBPKLT_ANIM:
+  // Write animation name
+  case KBPKLT_ANIM:
+  {
+    htable_insert(key_lighting, "animation_name", strclone(klt.animation_name));
+    break;
+  }
+
+  // Write effect name, color and time
+  case KBPKLT_EFFECT:
+  {
+    scptr htable_t *efft = keyboard_profile_effect_to_table("effect_", klt.effect_keys);
+    htable_append_table(key_lighting, efft, HTABLE_AM_OVERRIDE, (htable_value_clone_f) strclone);
+    break;
+  }
+
+  // Write custom keymap
+  case KBPKLT_CUSTOM:
+  {
+    scptr char **ckeys = NULL;
+    htable_list_keys(klt.custom_keys, &ckeys);
+
+    for (char **ckey = ckeys; *ckey; ckey++)
     {
-      htable_insert(key_lighting, "animation_name", strclone(klt.animation_name));
-      break;
+      keyboard_color_t *ckey_col = NULL;
+      if (htable_fetch(klt.custom_keys, *ckey, (void **) &ckey_col) != HTABLE_SUCCESS)
+        continue;
+
+      htable_insert(key_lighting, *ckey, keyboard_color_to_hex(ckey_col));
     }
-
-    // Write effect name, color and time
-    case KBPKLT_EFFECT:
-    {
-      scptr htable_t *efft = keyboard_profile_effect_to_table("effect_", klt.effect_keys);
-      htable_append_table(key_lighting, efft, HTABLE_AM_OVERRIDE, (htable_value_clone_f) strclone);
-      break;
-    }
-
-    // Write custom keymap
-    case KBPKLT_CUSTOM:
-    {
-      scptr char **ckeys = NULL;
-      htable_list_keys(klt.custom_keys, &ckeys);
-
-      for (char **ckey = ckeys; *ckey; ckey++)
-      {
-        keyboard_color_t *ckey_col = NULL;
-        if (htable_fetch(klt.custom_keys, *ckey, (void **) &ckey_col) != HTABLE_SUCCESS)
-          continue;
-
-        htable_insert(key_lighting, *ckey, keyboard_color_to_hex(ckey_col));
-      }
-      break;
-    }
+    break;
+  }
   }
 
   // Logo effect
